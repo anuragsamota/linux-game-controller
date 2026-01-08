@@ -17,10 +17,11 @@ pip install -r requirements.txt
 ```bash
 PYTHONPATH=. python -m src.controller_server.main --host 0.0.0.0 --port 8765
 ```
+[WEB] python3: can't open file '/home/anurag/Downloads/linux-game-controller/web_server.py': [Errno 2] No such file or directory
 
-- Static web server only:
+- Static web server only (serves ./web):
 ```bash
-PYTHONPATH=. python web_server.py --port 8000
+python -m http.server 8000 --directory web
 ```
 
 ## Using Helper Scripts

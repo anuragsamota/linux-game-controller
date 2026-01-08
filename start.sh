@@ -43,7 +43,7 @@ start_web_server() {
 	echo "[INFO] Serving web client on http://localhost:${WEB_PORT}" 
 	cd "${ROOT_DIR}"
 	source "${VENV_DIR}/bin/activate"
-	PYTHONPATH="${ROOT_DIR}" exec python3 web_server.py --port "${WEB_PORT}" 
+	PYTHONPATH="${ROOT_DIR}" exec python3 -m http.server "${WEB_PORT}" --directory "${ROOT_DIR}/web"
 }
 
 check_controller_env() {
