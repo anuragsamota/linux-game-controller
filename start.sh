@@ -132,25 +132,29 @@ main() {
 	echo "🎮 Controller Access URLs:"
 	echo "=========================================="
 	
-	# Get all network interfaces and their IPs
+	# Get all network interfaces and their IPv4s (exclude loopback)
 	if command -v ip >/dev/null 2>&1; then
-		# Use ip command to get all IPv4 addresses
+		# Stable, parseable one-line format
 		while IFS= read -r line; do
 			iface=$(echo "$line" | awk '{print $2}')
 			ip_addr=$(echo "$line" | awk '{print $4}' | cut -d'/' -f1)
-			if [ -n "$ip_addr" ] && [ "$ip_addr" != "127.0.0.1" ]; then
+			if [ "$iface" != "lo" ] && [ -n "$ip_addr" ] && [ "$ip_addr" != "127.0.0.1" ]; then
 				echo "  📡 $iface: http://$ip_addr:${WEB_PORT}"
 			fi
-		done < <(ip -4 addr show | grep -E "^\s*inet " | grep -v "127.0.0.1")
+		done < <(ip -4 -o addr show up scope global)
 	elif command -v ifconfig >/dev/null 2>&1; then
-		# Fallback to ifconfig
+		# Fallback to ifconfig: track current interface and its inet line
+		current_iface=""
 		while IFS= read -r line; do
-			iface=$(echo "$line" | awk '{print $1}' | tr -d ':')
-			ip_addr=$(echo "$line" | grep -oE 'inet [0-9.]+' | awk '{print $2}')
-			if [ -n "$ip_addr" ] && [ "$ip_addr" != "127.0.0.1" ]; then
-				echo "  📡 $iface: http://$ip_addr:${WEB_PORT}"
+			if echo "$line" | grep -E "^[a-zA-Z0-9].*:" >/dev/null 2>&1; then
+				current_iface=$(echo "$line" | awk -F':' '{print $1}')
+			elif echo "$line" | grep -E "inet (addr:)?[0-9.]+" >/dev/null 2>&1; then
+				ip_addr=$(echo "$line" | sed -n 's/.*inet \(addr:\)\?\([0-9.]*\).*/\2/p')
+				if [ -n "$current_iface" ] && [ -n "$ip_addr" ] && [ "$ip_addr" != "127.0.0.1" ]; then
+					echo "  📡 $current_iface: http://$ip_addr:${WEB_PORT}"
+				fi
 			fi
-		done < <(ifconfig | grep -E "^[a-z]|inet ")
+		done < <(ifconfig)
 	fi
 	
 	# Always show localhost
