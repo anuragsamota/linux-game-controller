@@ -127,8 +127,38 @@ main() {
 	WEB_PID=$!
 
 	echo "[INFO] Servers running (WS PID=${WS_PID}, WEB PID=${WEB_PID})"
-	echo "[INFO] Web UI: http://localhost:${WEB_PORT}"
-	echo "[INFO] Controller WS: ws://${WS_HOST}:${WS_PORT}"
+	echo ""
+	echo "=========================================="
+	echo "🎮 Controller Access URLs:"
+	echo "=========================================="
+	
+	# Get all network interfaces and their IPs
+	if command -v ip >/dev/null 2>&1; then
+		# Use ip command to get all IPv4 addresses
+		while IFS= read -r line; do
+			iface=$(echo "$line" | awk '{print $2}')
+			ip_addr=$(echo "$line" | awk '{print $4}' | cut -d'/' -f1)
+			if [ -n "$ip_addr" ] && [ "$ip_addr" != "127.0.0.1" ]; then
+				echo "  📡 $iface: http://$ip_addr:${WEB_PORT}"
+			fi
+		done < <(ip -4 addr show | grep -E "^\s*inet " | grep -v "127.0.0.1")
+	elif command -v ifconfig >/dev/null 2>&1; then
+		# Fallback to ifconfig
+		while IFS= read -r line; do
+			iface=$(echo "$line" | awk '{print $1}' | tr -d ':')
+			ip_addr=$(echo "$line" | grep -oE 'inet [0-9.]+' | awk '{print $2}')
+			if [ -n "$ip_addr" ] && [ "$ip_addr" != "127.0.0.1" ]; then
+				echo "  📡 $iface: http://$ip_addr:${WEB_PORT}"
+			fi
+		done < <(ifconfig | grep -E "^[a-z]|inet ")
+	fi
+	
+	# Always show localhost
+	echo "  🏠 Localhost: http://localhost:${WEB_PORT}"
+	echo "  🏠 Loopback: http://127.0.0.1:${WEB_PORT}"
+	echo ""
+	echo "WebSocket Endpoint: ws://${WS_HOST}:${WS_PORT}"
+	echo "=========================================="
 	echo "[INFO] Press Ctrl+C to stop both servers."
 
 	wait

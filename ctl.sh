@@ -7,6 +7,21 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SCRIPTS_DIR="${ROOT_DIR}"
 
+# Double Ctrl+C handling
+CTRL_C_COUNT=0
+trap_handler() {
+  CTRL_C_COUNT=$((CTRL_C_COUNT + 1))
+  if [ $CTRL_C_COUNT -ge 2 ]; then
+    echo -e "\n${GREEN}${ICON_CHECK} Goodbye!${RESET}\n"
+    exit 0
+  else
+    echo -e "\n${YELLOW}${ICON_WARN} Press Ctrl+C again to exit${RESET}"
+    sleep 2
+    CTRL_C_COUNT=0  # Reset counter after timeout
+  fi
+}
+trap trap_handler INT
+
 # Color definitions
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -116,20 +131,30 @@ run_command() {
     init)
       echo -e "\n${BLUE}${ICON_GEAR}  Running initialization...${RESET}\n"
       require_script "${SCRIPTS_DIR}/init.sh"
-      exec "${SCRIPTS_DIR}/init.sh" "$@"
+      "${SCRIPTS_DIR}/init.sh" "$@"
+      echo -e "\n${DIM}Press Enter to return to menu...${RESET}"
+      read -r
+      return 0
       ;;
     start)
       echo -e "\n${BLUE}${ICON_ROCKET}  Starting servers...${RESET}\n"
       require_script "${SCRIPTS_DIR}/start.sh"
-      exec "${SCRIPTS_DIR}/start.sh" "$@"
+      "${SCRIPTS_DIR}/start.sh" "$@"
+      echo -e "\n${DIM}Press Enter to return to menu...${RESET}"
+      read -r
+      return 0
       ;;
     reset)
       echo -e "\n${BLUE}${ICON_TRASH}  Resetting environment...${RESET}\n"
       require_script "${SCRIPTS_DIR}/reset.sh"
-      exec "${SCRIPTS_DIR}/reset.sh" "$@"
+      "${SCRIPTS_DIR}/reset.sh" "$@"
+      echo -e "\n${DIM}Press Enter to return to menu...${RESET}"
+      read -r
+      return 0
       ;;
     help|-h|--help)
       print_help
+      return 0
       ;;
     exit|quit|q)
       echo -e "${GREEN}${ICON_CHECK} Goodbye!${RESET}"

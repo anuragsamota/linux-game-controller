@@ -76,7 +76,9 @@ main() {
   # Launch interactive controller manager
   if [ -x ./ctl.sh ]; then
     echo "[INFO] Launching interactive controller manager (./ctl.sh)"
-    exec ./ctl.sh
+    echo ""
+    # Redirect stdin from terminal to allow interactive input
+    exec ./ctl.sh < /dev/tty
   else
     echo "[WARN] ctl.sh not found or not executable. Start manually when available: ./ctl.sh"
   fi
