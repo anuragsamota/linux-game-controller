@@ -8,14 +8,16 @@ set -euo pipefail
 # - Installs dependencies from requirements.txt (if present)
 #
 # Usage examples:
-#   ./scripts/setup_project.sh https://github.com/user/repo.git my-project
-#   ./scripts/setup_project.sh https://github.com/user/repo.git      # clones into repo name
+#   ./scripts/setup_project.sh https://github.com/anuragsamota/linux-game-controller.git my-project
+#   ./scripts/setup_project.sh https://github.com/anuragsamota/linux-game-controller.git      # clones into repo name
+#   ./scripts/setup_project.sh                            # uses default repo URL and directory name
 #
 # Optional env vars:
 #   PYTHON_BIN=python3.11   # choose a specific python
 #   VENV_NAME=.venv         # virtualenv directory name
 
-REPO_URL=${1:-}
+DEFAULT_REPO="https://github.com/anuragsamota/linux-game-controller.git"
+REPO_URL=${1:-$DEFAULT_REPO}
 TARGET_DIR=${2:-}
 PYTHON_BIN=${PYTHON_BIN:-python3}
 VENV_NAME=${VENV_NAME:-.venv}
@@ -36,8 +38,8 @@ main() {
   require git
   require "$PYTHON_BIN"
 
-  if [ -z "$REPO_URL" ]; then
-    abort "Repository URL is required. Usage: ./scripts/setup_project.sh <repo-url> [target-dir]"
+  if [ "$REPO_URL" = "$DEFAULT_REPO" ]; then
+    echo "[INFO] No repo URL provided; using default: $DEFAULT_REPO"
   fi
 
   if [ -z "$TARGET_DIR" ]; then
@@ -70,6 +72,14 @@ main() {
   fi
 
   echo "[INFO] Setup complete. Activate env with: source $TARGET_DIR/$VENV_NAME/bin/activate"
+
+  # Launch interactive controller manager
+  if [ -x ./scripts/ctl.sh ]; then
+    echo "[INFO] Launching interactive controller manager (./scripts/ctl.sh)"
+    exec ./scripts/ctl.sh
+  else
+    echo "[WARN] scripts/ctl.sh not found or not executable. Start manually when available: ./scripts/ctl.sh"
+  fi
 }
 
 main "$@"

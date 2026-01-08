@@ -13,39 +13,37 @@ A lightweight system to control a Linux virtual gamepad over WebSocket/WebRTC fr
 - Sudo privileges (for initialization)
 
 ## Quickstart
+Clone and prepare the project in the current directory, then auto-launch the interactive CLI:
 
 ```bash
-# From project root
+curl -sSL https://raw.githubusercontent.com/anuragsamota/linux-game-controller/master/scripts/setup_project.sh \
+	| bash -s -- https://github.com/anuragsamota/linux-game-controller.git
+```
+
+### Manual setup (full)
+Perform a clean local setup manually:
+
+```bash
+# 1) Clone the repo
+git clone https://github.com/anuragsamota/linux-game-controller.git
+cd linux-game-controller
+
+# 2) Create and activate virtual environment
 python3 -m venv .venv
 source .venv/bin/activate
+
+# 3) Install dependencies
+pip install --upgrade pip
 pip install -r requirements.txt
 
-# Initialize environment (loads uinput, sets permissions)
+# 4) Initialize controller environment (requires sudo)
 ./scripts/init.sh
 
-# Start both servers (WebSocket + Web UI)
+# 5) Start servers (WebSocket + Web UI)
 ./scripts/ctl.sh start
-# Web UI will be at http://localhost:8000 (default)
 ```
 
-### Bootstrap via one‑liner
-Run the setup script directly from GitHub to clone and prepare the project in the current directory:
-
-```bash
-curl -sSL https://raw.githubusercontent.com/<owner>/<repo>/main/scripts/setup_project.sh \
-	| bash -s -- https://github.com/<owner>/<repo>.git <target-dir>
-```
-
-Notes:
-- Replace `<owner>/<repo>` with your repository path.
-- Omit `<target-dir>` to use the repo name by default.
-- You can select a Python version via `PYTHON_BIN` and virtualenv name via `VENV_NAME`:
-
-```bash
-PYTHON_BIN=python3.11 VENV_NAME=.venv \
-	curl -sSL https://raw.githubusercontent.com/<owner>/<repo>/main/scripts/setup_project.sh \
-	| bash -s -- https://github.com/<owner>/<repo>.git
-```
+After setup completes (one‑liner or manual), the interactive CLI (`scripts/ctl.sh`) lets you initialize the environment or start the servers.
 
 Environment variables:
 - `WS_HOST` (default: `0.0.0.0`)
