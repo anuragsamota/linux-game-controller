@@ -26,13 +26,13 @@ PYTHONPATH=. python web_server.py --port 8000
 ## Using Helper Scripts
 - Interactive menu:
 ```bash
-./scripts/ctl.sh
+./ctl.sh
 ```
 - Direct commands:
 ```bash
-./scripts/init.sh
-./scripts/ctl.sh start
-./scripts/reset.sh
+./init.sh
+./ctl.sh start
+./reset.sh
 ```
 
 ## Environment Variables
@@ -47,4 +47,4 @@ Server logs use `[timestamp] LEVEL logger: message` format. Normal shutdown logs
 - `src/controller_server/server.py`: WebSocket server and device handling
 - `src/controller_server/main.py`: CLI entrypoint
 - `web/`: static client files (JS/CSS/HTML)
-- `scripts/`: bash scripts for env and runtime management
+- Root scripts (`init.sh`, `ctl.sh`, `start.sh`, `reset.sh`): bash scripts for env and runtime management

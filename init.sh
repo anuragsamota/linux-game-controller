@@ -47,29 +47,52 @@ main() {
     echo "[NOTE] You must log out and back in for group changes to take effect"
   fi
 
-  # Ensure uinput kernel module is loaded
-  if lsmod | grep -q 'uinput'; then
-    echo "[OK] uinput module already loaded"
-  else
-    echo "[INFO] Loading uinput kernel module"
-    sudo modprobe uinput
-  fi
-
-  read -r -d '' RULE_CONTENT <<'RULE'
-KERNEL=="uinput", MODE:="0660", GROUP:="input"
-RULE
+  # Install udev rule BEFORE loading module (so it applies on module load)
+  RULE_CONTENT='KERNEL=="uinput", MODE:="0660", GROUP:="input"'
 
   if [ -f "${UINPUT_RULE}" ]; then
     echo "[OK] udev rule already present: ${UINPUT_RULE}"
   else
     echo "[INFO] Installing udev rule at ${UINPUT_RULE}"
-    printf "%s\n" "${RULE_CONTENT}" | sudo tee "${UINPUT_RULE}" >/dev/null
+    echo "${RULE_CONTENT}" | sudo tee "${UINPUT_RULE}" >/dev/null
     sudo udevadm control --reload-rules
-    sudo udevadm trigger --subsystem-match=input
     echo "[OK] udev rules reloaded"
   fi
 
+  # Ensure uinput kernel module is loaded
+  module_was_loaded=false
+  if lsmod | grep -q 'uinput'; then
+    echo "[OK] uinput module already loaded"
+    module_was_loaded=true
+  else
+    echo "[INFO] Loading uinput kernel module"
+    sudo modprobe uinput
+  fi
+
+  # Trigger udev to apply rules to existing devices
+  sudo udevadm trigger --name-match=uinput 2>/dev/null || true
+  sleep 1  # Give udev a moment to apply rules
+
+  # Always check and fix permissions
   if [ -e /dev/uinput ]; then
+    current_perms=$(stat -c "%a %G" /dev/uinput 2>/dev/null || echo "unknown")
+    echo "[INFO] Current /dev/uinput permissions: ${current_perms}"
+    
+    # Check if permissions are correct
+    current_mode=$(stat -c "%a" /dev/uinput 2>/dev/null || echo "000")
+    current_group=$(stat -c "%G" /dev/uinput 2>/dev/null || echo "unknown")
+    
+    if [ "${current_mode}" != "660" ] || [ "${current_group}" != "${TARGET_GROUP}" ]; then
+      echo "[INFO] Fixing /dev/uinput permissions (expected: 660 ${TARGET_GROUP})"
+      sudo chown root:"${TARGET_GROUP}" /dev/uinput
+      sudo chmod 660 /dev/uinput
+    else
+      echo "[OK] /dev/uinput permissions already correct"
+    fi
+    
+    # Verify final permissions
+    final_perms=$(stat -c "%a %G" /dev/uinput 2>/dev/null || echo "unknown")
+    echo "[OK] Final /dev/uinput permissions: ${final_perms}"
     ls -l /dev/uinput
   else
     echo "[WARN] /dev/uinput not found. It should appear after loading the module."

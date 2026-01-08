@@ -16,8 +16,7 @@ A lightweight system to control a Linux virtual gamepad over WebSocket/WebRTC fr
 Clone and prepare the project in the current directory, then auto-launch the interactive CLI:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/anuragsamota/linux-game-controller/master/scripts/setup_project.sh \
-	| bash -s -- https://github.com/anuragsamota/linux-game-controller.git
+curl -sSL https://raw.githubusercontent.com/anuragsamota/linux-game-controller/master/setup_project.sh | bash
 ```
 
 ### Manual setup (full)
@@ -37,13 +36,13 @@ pip install --upgrade pip
 pip install -r requirements.txt
 
 # 4) Initialize controller environment (requires sudo)
-./scripts/init.sh
+./init.sh
 
 # 5) Start servers (WebSocket + Web UI)
-./scripts/ctl.sh start
+./ctl.sh start
 ```
 
-After setup completes (one‑liner or manual), the interactive CLI (`scripts/ctl.sh`) lets you initialize the environment or start the servers.
+After setup completes (one‑liner or manual), the interactive CLI (`ctl.sh`) lets you initialize the environment or start the servers.
 
 Environment variables:
 - `WS_HOST` (default: `0.0.0.0`)
@@ -52,14 +51,15 @@ Environment variables:
 
 Example:
 ```bash
-WS_PORT=9000 WEB_PORT=8088 ./scripts/ctl.sh start
+WS_PORT=9000 WEB_PORT=8088 ./ctl.sh start
 ```
 
 ## Scripts Overview
-- `scripts/ctl.sh`: Interactive, colorful CLI to run `init`, `start`, `reset`.
-- `scripts/init.sh`: Sets up `uinput`, `input` group membership, and udev rules.
-- `scripts/start.sh`: Activates `.venv` and runs WebSocket and static web servers.
-- `scripts/reset.sh`: Reverts initialization (group, rules, module).
+- `ctl.sh`: Interactive, colorful CLI to run `init`, `start`, `reset`.
+- `init.sh`: Sets up `uinput`, `input` group membership, and udev rules.
+- `start.sh`: Activates `.venv` and runs WebSocket and static web servers.
+- `reset.sh`: Reverts initialization (group, rules, module).
+- `setup_project.sh`: Bootstrap script to clone, setup venv, and launch CLI.
 
 ## Documentation
 - User Guide: [docs/UserGuide.md](docs/UserGuide.md)

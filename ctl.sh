@@ -4,8 +4,8 @@ set -euo pipefail
 # 🎮 Virtual Game Controller Manager
 # Beautiful, colorful, interactive CLI wrapper
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-SCRIPTS_DIR="${ROOT_DIR}/scripts"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPTS_DIR="${ROOT_DIR}"
 
 # Color definitions
 RED='\033[0;31m'

@@ -8,9 +8,9 @@ set -euo pipefail
 # - Installs dependencies from requirements.txt (if present)
 #
 # Usage examples:
-#   ./scripts/setup_project.sh https://github.com/anuragsamota/linux-game-controller.git my-project
-#   ./scripts/setup_project.sh https://github.com/anuragsamota/linux-game-controller.git      # clones into repo name
-#   ./scripts/setup_project.sh                            # uses default repo URL and directory name
+#   ./setup_project.sh https://github.com/anuragsamota/linux-game-controller.git my-project
+#   ./setup_project.sh https://github.com/anuragsamota/linux-game-controller.git      # clones into repo name
+#   ./setup_project.sh                            # uses default repo URL and directory name
 #
 # Optional env vars:
 #   PYTHON_BIN=python3.11   # choose a specific python
@@ -74,11 +74,11 @@ main() {
   echo "[INFO] Setup complete. Activate env with: source $TARGET_DIR/$VENV_NAME/bin/activate"
 
   # Launch interactive controller manager
-  if [ -x ./scripts/ctl.sh ]; then
-    echo "[INFO] Launching interactive controller manager (./scripts/ctl.sh)"
-    exec ./scripts/ctl.sh
+  if [ -x ./ctl.sh ]; then
+    echo "[INFO] Launching interactive controller manager (./ctl.sh)"
+    exec ./ctl.sh
   else
-    echo "[WARN] scripts/ctl.sh not found or not executable. Start manually when available: ./scripts/ctl.sh"
+    echo "[WARN] ctl.sh not found or not executable. Start manually when available: ./ctl.sh"
   fi
 }
 

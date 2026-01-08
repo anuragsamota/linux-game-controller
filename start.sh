@@ -54,12 +54,7 @@ check_controller_env() {
 		exit 1
 	fi
 
-	if ! id -nG "${user}" | grep -qw "${INPUT_GROUP}"; then
-		echo "[ERROR] User '${user}' is not in '${INPUT_GROUP}' group." >&2
-		echo "        Run scripts/init.sh and re-login." >&2
-		exit 1
-	fi
-
+	# Check permissions FIRST (more specific error)
 	local perms
 	perms=$(stat -c "%a %G" /dev/uinput 2>/dev/null || true)
 	if [ -n "${perms}" ]; then
@@ -68,9 +63,19 @@ check_controller_env() {
 		group=$(echo "${perms}" | awk '{print $2}')
 		if [ "${group}" != "${INPUT_GROUP}" ] || [ "${mode}" != "660" -a "${mode}" != "0660" ]; then
 			echo "[ERROR] /dev/uinput has permissions '${perms}' (expected 660 ${INPUT_GROUP})." >&2
-			echo "        Run scripts/init.sh and re-login." >&2
+			echo "        Run scripts/init.sh to fix permissions." >&2
+			if ! id -nG "${user}" | grep -qw "${INPUT_GROUP}"; then
+				echo "        Note: You are also not in '${INPUT_GROUP}' group. After init.sh, re-login." >&2
+			fi
 			exit 1
 		fi
+	fi
+
+	# Check group membership
+	if ! id -nG "${user}" | grep -qw "${INPUT_GROUP}"; then
+		echo "[ERROR] User '${user}' is not in '${INPUT_GROUP}' group." >&2
+		echo "        Run scripts/init.sh and re-login." >&2
+		exit 1
 	fi
 
 	if [ ! -f "${UINPUT_RULE}" ]; then

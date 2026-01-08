@@ -9,7 +9,7 @@ This requires sudo. It will:
 - Install a udev rule for `/dev/uinput` permissions
 
 ```bash
-./scripts/init.sh
+./init.sh
 ```
 
 If you see permission errors, re-login after running the script.
@@ -18,7 +18,7 @@ If you see permission errors, re-login after running the script.
 Starts the WebSocket controller server and static web server.
 
 ```bash
-./scripts/ctl.sh start
+./ctl.sh start
 ```
 
 Default ports:
@@ -27,7 +27,7 @@ Default ports:
 
 Ports automatically fallback to the next free one within 20 tries. Override with:
 ```bash
-WS_PORT=9000 WEB_PORT=8088 ./scripts/ctl.sh start
+WS_PORT=9000 WEB_PORT=8088 ./ctl.sh start
 ```
 
 ## 3. Use the Web UI
@@ -38,7 +38,7 @@ Open the URL printed by `ctl.sh` (typically `http://localhost:8000`).
 ## 4. Reset the Environment
 To revert uinput setup and permissions:
 ```bash
-./scripts/reset.sh
+./reset.sh
 ```
 
 ## Notes
