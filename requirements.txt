@@ -1,0 +1,3 @@
+python-uinput
+websockets
+aiortc

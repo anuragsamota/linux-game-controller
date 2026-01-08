@@ -1,0 +1,57 @@
+# Python bytecode and cache
+__pycache__/
+src/**/__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Builds and packaging
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Type checking / Linters / tooling caches
+.mypy_cache/
+.pytype/
+.ruff_cache/
+.tox/
+.nox/
+
+# Logs and PIDs
+*.log
+logs/
+*.pid
+
+# Environment files
+.env
+.env.*
+
+# Editor and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Web/Node (if used)
+node_modules/
+web/.cache/
+web/dist/
+web/build/
+
+# Temporary/Misc
+*.bak
+*.tmp
+*.orig
