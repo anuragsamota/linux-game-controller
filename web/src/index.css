@@ -1,0 +1,74 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gamepad-primary: #06b6d4;
+  --color-gamepad-secondary: #0891b2;
+  --color-gamepad-accent: #06b6d4;
+  --color-gamepad-background: #0f172a;
+  --color-gamepad-surface: #1e293b;
+  --color-gamepad-border: #334155;
+}
+
+* {
+  user-select: none;
+}
+
+/* Disable touch-action only on buttons and interactive elements */
+button, input, textarea, select {
+  touch-action: manipulation;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #0f172a 0%, #1a2844 100%);
+  color: white;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+#root {
+  min-height: 100vh;
+  min-width: 100vw;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-gamepad-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+}
+
+/* Range input styling */
+input[type="range"] {
+  accent-color: #06b6d4;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+input[type="range"]::-moz-range-thumb {
+  background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-gamepad-primary)/80;
+}

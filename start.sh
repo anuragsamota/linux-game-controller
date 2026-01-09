@@ -40,10 +40,26 @@ start_ws_server() {
 }
 
 start_web_server() {
-	echo "[INFO] Serving web client on http://localhost:${WEB_PORT}" 
-	cd "${ROOT_DIR}"
-	source "${VENV_DIR}/bin/activate"
-	PYTHONPATH="${ROOT_DIR}" exec python3 -m http.server "${WEB_PORT}" --directory "${ROOT_DIR}/web"
+	local dist_dir="${ROOT_DIR}/web/dist"
+	
+	# Check if build exists, if not build it
+	if [ ! -d "${dist_dir}" ]; then
+		echo "[INFO] Build not found. Building web client..."
+		cd "${ROOT_DIR}/web"
+		if command -v pnpm >/dev/null 2>&1; then
+			pnpm run build
+		elif command -v npm >/dev/null 2>&1; then
+			npm run build
+		else
+			echo "[ERROR] Neither pnpm nor npm found. Cannot build web client." >&2
+			exit 1
+		fi
+	fi
+	
+	echo "[INFO] Starting Python HTTP server on http://0.0.0.0:${WEB_PORT}" 
+	cd "${dist_dir}"
+	# Use Python's built-in HTTP server to serve static files
+	exec python3 -m http.server "${WEB_PORT}" --bind 0.0.0.0
 }
 
 check_controller_env() {

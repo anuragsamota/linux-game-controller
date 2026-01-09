@@ -71,6 +71,23 @@ main() {
     echo "[WARN] requirements.txt not found. Skipping dependency install."
   fi
 
+  # Install web dependencies
+  if [ -d "web" ]; then
+    echo "[INFO] Installing web client dependencies..."
+    cd web
+    if command -v pnpm >/dev/null 2>&1; then
+      echo "[INFO] Using pnpm for web dependencies"
+      pnpm install
+    elif command -v npm >/dev/null 2>&1; then
+      echo "[INFO] Using npm for web dependencies"
+      npm install
+    else
+      echo "[WARN] Neither pnpm nor npm found. Skipping web dependencies."
+      echo "       Install Node.js and pnpm/npm, then run: cd web && pnpm install"
+    fi
+    cd ..
+  fi
+
   echo "[INFO] Setup complete. Activate env with: source $TARGET_DIR/$VENV_NAME/bin/activate"
 
   # Launch interactive controller manager

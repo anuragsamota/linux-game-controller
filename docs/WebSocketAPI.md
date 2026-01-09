@@ -54,8 +54,16 @@ Response:
 {"type": "ok"}
 ```
 
+**Available Buttons for `standard` device:**
+- Face buttons: `a`, `b`, `x`, `y`
+- Shoulder buttons: `l1`, `r1` (also known as LB/RB)
+- Trigger buttons (click): `l2_click`, `r2_click` (also known as LT/RT click)
+- Thumbstick buttons: `l3`, `r3` (press down on joysticks)
+- D-pad buttons: `dpad_up`, `dpad_down`, `dpad_left`, `dpad_right`
+- Menu buttons: `start`, `back` (also known as Menu/View or Select)
+
 ### `axis`
-Set an axis value (float).
+Set an axis value (float, typically -1.0 to 1.0 range).
 ```json
 {"event": "axis", "device": "standard", "name": "lx", "value": 0.25}
 ```
@@ -63,6 +71,22 @@ Response:
 ```json
 {"type": "ok"}
 ```
+
+**Available Axes for `standard` device:**
+- Left joystick: `lx` (left -1.0, right +1.0), `ly` (up -1.0, down +1.0)
+- Right joystick: `rx` (left -1.0, right +1.0), `ry` (up -1.0, down +1.0)
+- Triggers: `lt` (0.0 to 1.0), `rt` (0.0 to 1.0)
+- D-pad axes: `dpad_x` (left -1.0, right +1.0), `dpad_y` (up -1.0, down +1.0)
+  - **Note:** D-pad axes are mirrored to button events automatically
+  - Sending `dpad_x: -1.0` triggers `dpad_left` button press
+  - Sending `dpad_x: 0.0` releases both `dpad_left` and `dpad_right`
+- Touchpad: `px` (-1.0 to 1.0), `py` (-1.0 to 1.0)
+
+**Axis Value Conventions:**
+- Joysticks: -1.0 (full left/up) to +1.0 (full right/down), 0.0 centered
+- Triggers: 0.0 (not pressed) to 1.0 (fully pressed)
+- D-pad axes: -1.0, 0.0, or +1.0 (discrete positions)
+- Touchpad: -1.0 to +1.0 for both x and y coordinates
 
 ### `rename`
 Note: device names are immutable; this returns an error.

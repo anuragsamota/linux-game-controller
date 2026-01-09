@@ -1,14 +1,22 @@
 # Linux Game Controller (Virtual)
 
-A lightweight system to control a Linux virtual gamepad over WebSocket/WebRTC from a web UI.
+A modern, customizable virtual gamepad system with a React-based web interface for controlling Linux games over WebSocket.
 
-- Python asyncio WebSocket server for input events
-- Static web client with auto-hostname detection and performance optimizations
-- Helper scripts to initialize uinput, start services, and reset environment
+## Features
+
+- **Modern Web Client**: Built with Vite, React, and Tailwind CSS
+- **Multiple Controller Configurations**: Create and save unlimited custom layouts
+- **Edit Mode**: Drag, resize, add, and remove buttons in real-time
+- **Responsive Design**: Optimized for mobile landscape mode with touch support
+- **WebSocket Communication**: Low-latency input transmission
+- **Import/Export**: Share configurations as JSON files
+- **Default Templates**: Pre-configured Standard Gamepad and Minimal layouts
+- **Joystick Support**: Analog stick controls with visual feedback
 
 ## Requirements
 - Linux with `uinput` support
 - Python 3.13+
+- Node.js 18+ (for web client development)
 - Virtual environment in `.venv`
 - Sudo privileges (for initialization)
 
@@ -35,10 +43,15 @@ source .venv/bin/activate
 pip install --upgrade pip
 pip install -r requirements.txt
 
-# 4) Initialize controller environment (requires sudo)
+# 4) Install web client dependencies
+cd web
+npm install
+cd ..
+
+# 5) Initialize controller environment (requires sudo)
 ./init.sh
 
-# 5) Start servers (WebSocket + Web UI)
+# 6) Start servers (WebSocket + Web UI)
 ./ctl.sh start
 ```
 
@@ -57,13 +70,15 @@ WS_PORT=9000 WEB_PORT=8088 ./ctl.sh start
 ## Scripts Overview
 - `ctl.sh`: Interactive, colorful CLI to run `init`, `start`, `reset`.
 - `init.sh`: Sets up `uinput`, `input` group membership, and udev rules.
-- `start.sh`: Activates `.venv` and runs WebSocket and static web servers.
+- `start.sh`: Activates `.venv` and runs WebSocket and Vite dev servers.
+- `build.sh`: Builds production-ready web client.
 - `reset.sh`: Reverts initialization (group, rules, module).
 - `setup_project.sh`: Bootstrap script to clone, setup venv, and launch CLI.
 
 ## Documentation
 - User Guide: [docs/UserGuide.md](docs/UserGuide.md)
 - Developer Guide: [docs/Development.md](docs/Development.md)
+- Web Client Development: [docs/WebClientDevelopment.md](docs/WebClientDevelopment.md)
 - WebSocket API: [docs/WebSocketAPI.md](docs/WebSocketAPI.md)
 - Troubleshooting: [docs/Troubleshooting.md](docs/Troubleshooting.md)
 
