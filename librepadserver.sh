@@ -5,7 +5,7 @@ set -euo pipefail
 # Beautiful, colorful, interactive CLI wrapper
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SCRIPTS_DIR="${ROOT_DIR}"
+SCRIPTS_DIR="${ROOT_DIR}/scripts/linux"
 
 # Double Ctrl+C handling
 CTRL_C_COUNT=0
@@ -131,7 +131,7 @@ run_command() {
     init)
       echo -e "\n${BLUE}${ICON_GEAR}  Running initialization...${RESET}\n"
       require_script "${SCRIPTS_DIR}/init.sh"
-      "${SCRIPTS_DIR}/init.sh" "$@"
+      bash "${SCRIPTS_DIR}/init.sh" "$@"
       echo -e "\n${DIM}Press Enter to return to menu...${RESET}"
       read -r
       return 0
@@ -139,7 +139,7 @@ run_command() {
     start)
       echo -e "\n${BLUE}${ICON_ROCKET}  Starting servers...${RESET}\n"
       require_script "${SCRIPTS_DIR}/start.sh"
-      "${SCRIPTS_DIR}/start.sh" "$@"
+      bash "${SCRIPTS_DIR}/start.sh" "$@"
       echo -e "\n${DIM}Press Enter to return to menu...${RESET}"
       read -r
       return 0
@@ -147,7 +147,7 @@ run_command() {
     reset)
       echo -e "\n${BLUE}${ICON_TRASH}  Resetting environment...${RESET}\n"
       require_script "${SCRIPTS_DIR}/reset.sh"
-      "${SCRIPTS_DIR}/reset.sh" "$@"
+      bash "${SCRIPTS_DIR}/reset.sh" "$@"
       echo -e "\n${DIM}Press Enter to return to menu...${RESET}"
       read -r
       return 0

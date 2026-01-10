@@ -50,31 +50,47 @@ npm install
 cd ..
 
 # 5) Initialize controller environment (requires sudo)
-./init.sh
+bash scripts/linux/init.sh
 
 # 6) Start servers (WebSocket + Web UI)
-./ctl.sh start
+bash scripts/linux/start.sh
 ```
 
-After setup completes (one‑liner or manual), the interactive CLI (`ctl.sh`) lets you initialize the environment or start the servers.
+Or use the interactive manager:
 
-Environment variables:
+```bash
+./librepadserver.sh
+```
+
+**Environment variables:**
 - `WS_HOST` (default: `0.0.0.0`)
 - `WS_PORT` (default: `8765`, with port fallback scanning)
 - `WEB_PORT` (default: `8000`, with port fallback scanning)
 
-Example:
+**Example:**
 ```bash
-WS_PORT=9000 WEB_PORT=8088 ./ctl.sh start
+WS_PORT=9000 WEB_PORT=8088 bash scripts/linux/start.sh
 ```
 
 ## Scripts Overview
-- `ctl.sh`: Interactive, colorful CLI to run `init`, `start`, `reset`.
-- `init.sh`: Sets up `uinput`, `input` group membership, and udev rules.
-- `start.sh`: Activates `.venv` and runs WebSocket and Vite dev servers.
+
+**Linux scripts** (`scripts/linux/`):
+- `librepadserver.sh`: Interactive CLI to run init, start, reset.
+- `init.sh`: Sets up uinput, input group membership, and udev rules.
+- `start.sh`: Activates .venv and runs WebSocket and Web servers.
 - `build.sh`: Builds production-ready web client.
 - `reset.sh`: Reverts initialization (group, rules, module).
-- `setup_project.sh`: Bootstrap script to clone, setup venv, and launch CLI.
+
+**Windows scripts** (`scripts/windows/`):
+- `librepadserver.bat`: Interactive menu (Windows equivalent).
+- `init.bat`: No-op on Windows (future ViGEm support).
+- `start.bat`: Starts WebSocket and Web servers.
+- `build.bat`: Builds production web client.
+- `reset.bat`: No-op on Windows.
+
+**Root-level launchers:**
+- `librepadserver.sh` / `librepadserver.bat`: Main entry point (platform-aware).
+- `setup_project.sh` / `setup_project.bat`: Bootstrap script to clone, setup venv, and launch CLI.
 
 ## Documentation
 - User Guide: [docs/UserGuide.md](docs/UserGuide.md)
@@ -85,7 +101,7 @@ WS_PORT=9000 WEB_PORT=8088 ./ctl.sh start
 
 ## Architecture
 - WebSocket server: transport and message handling for `button`/`axis`/lifecycle events.
-- Device registry: manages acquisition/release of virtual devices with platform-aware backends (`platforms/linux`, Windows stub for future work).
+- Device registry: manages acquisition/release of virtual devices with platform-aware backends (`src/controller_server/platforms/linux`, Windows stub for future work).
 - Web client: sends controller/touchpad events; auto-detects server hostname.
 
 ## Graceful Shutdown

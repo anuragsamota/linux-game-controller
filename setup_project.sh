@@ -91,13 +91,13 @@ main() {
   echo "[INFO] Setup complete. Activate env with: source $TARGET_DIR/$VENV_NAME/bin/activate"
 
   # Launch interactive controller manager
-  if [ -x ./ctl.sh ]; then
-    echo "[INFO] Launching interactive controller manager (./ctl.sh)"
+  if [ -x ./librepadserver.sh ]; then
+    echo "[INFO] Launching interactive controller manager (./librepadserver.sh)"
     echo ""
     # Redirect stdin from terminal to allow interactive input
-    exec ./ctl.sh < /dev/tty
+    exec ./librepadserver.sh < /dev/tty
   else
-    echo "[WARN] ctl.sh not found or not executable. Start manually when available: ./ctl.sh"
+    echo "[WARN] librepadserver.sh not found or not executable. Start manually when available: ./librepadserver.sh"
   fi
 }
 

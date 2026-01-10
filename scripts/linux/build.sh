@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Build the React web client for production
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 WEB_DIR="${ROOT_DIR}/web"
 
 echo "[INFO] Building web client for production..."

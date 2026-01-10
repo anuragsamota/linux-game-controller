@@ -5,7 +5,7 @@ set -euo pipefail
 # - WebSocket server (game controller): src/controller_server/main.py
 # - Web client server (static files): web_server.py
 
-ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 VENV_DIR="${ROOT_DIR}/.venv"
 WS_HOST="${WS_HOST:-0.0.0.0}"
 WS_PORT="${WS_PORT:-8765}"
