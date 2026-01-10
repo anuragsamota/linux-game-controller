@@ -67,7 +67,7 @@ const Controller = ({
   return (
     <div 
       ref={containerRef}
-      className="relative w-full h-full bg-gradient-to-br from-gray-900/50 to-slate-900/50 rounded-xl overflow-hidden border border-cyan-500/20 shadow-lg"
+      className="relative w-full h-full bg-linear-to-br from-gray-900/50 to-slate-900/50 rounded-xl overflow-hidden border border-cyan-500/20 shadow-lg"
       onClick={handleContainerClick}
       style={{ touchAction: 'none' }}
     >

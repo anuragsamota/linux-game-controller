@@ -11,10 +11,10 @@ const ConnectionScreen = ({ onConnect, isConnecting }) => {
   };
 
   return (
-    <div className="min-h-screen w-screen overflow-y-auto bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 py-8 px-4">
+    <div className="min-h-screen w-screen overflow-y-auto bg-linear-to-br from-slate-900 via-slate-800 to-slate-900 py-8 px-4">
       <div className="flex items-center justify-center min-h-[calc(100vh-2rem)]">
         <div className="bg-gray-900 border border-cyan-500/30 rounded-2xl p-8 max-w-md w-full shadow-2xl shadow-cyan-500/20">
-          <h1 className="text-3xl font-bold text-center mb-2 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold text-center mb-2 bg-linear-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
             LibrePad Controller
           </h1>
           <p className="text-center text-gray-400 mb-8 text-sm">Connect to your LibrePad server</p>
@@ -59,7 +59,7 @@ const ConnectionScreen = ({ onConnect, isConnecting }) => {
             <button
               type="submit"
               disabled={isConnecting}
-              className="w-full py-3 bg-gradient-to-r from-cyan-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-cyan-500 hover:to-cyan-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/30"
+              className="w-full py-3 bg-linear-to-r from-cyan-600 to-cyan-500 text-white font-semibold rounded-lg hover:from-cyan-500 hover:to-cyan-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-cyan-500/30"
             >
               {isConnecting ? 'Connecting...' : 'Connect'}
             </button>
