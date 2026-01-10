@@ -97,10 +97,13 @@ print_help() {
   echo -e "    ${GREEN}Example:${RESET} ./ctl.sh init\n"
   
   echo -e "  ${CYAN}${BOLD}start${RESET}"
-  echo -e "    ${DIM}Start the WebSocket controller server and web client${RESET}"
+  echo -e "    ${DIM}Start the controller servers (WebSocket, UDP, and Web)${RESET}"
+  echo -e "    ${DIM}Usage: ./librepadserver.sh start [SERVICE_MODE]${RESET}"
+  echo -e "    ${DIM}SERVICE_MODE: all (default), ws, udp, web, ws-web${RESET}"
   echo -e "    ${DIM}Automatically finds free ports and validates setup${RESET}"
-  echo -e "    ${GREEN}Example:${RESET} ./ctl.sh start"
-  echo -e "    ${GREEN}Example:${RESET} WS_PORT=9000 WEB_PORT=8080 ./ctl.sh start\n"
+  echo -e "    ${GREEN}Example:${RESET} ./librepadserver.sh start"
+  echo -e "    ${GREEN}Example:${RESET} ./librepadserver.sh start udp"
+  echo -e "    ${GREEN}Example:${RESET} WS_PORT=9000 WEB_PORT=8080 ./librepadserver.sh start ws-web\n"
   
   echo -e "  ${CYAN}${BOLD}reset${RESET}"
   echo -e "    ${DIM}Revert all environment changes (requires sudo)${RESET}"
@@ -113,6 +116,7 @@ print_help() {
   echo -e "${WHITE}${BOLD}Environment Variables:${RESET}"
   echo -e "  ${YELLOW}WS_HOST${RESET}    ${DIM}WebSocket bind address (default: 0.0.0.0)${RESET}"
   echo -e "  ${YELLOW}WS_PORT${RESET}    ${DIM}WebSocket port (default: 8765)${RESET}"
+  echo -e "  ${YELLOW}UDP_PORT${RESET}   ${DIM}UDP port (default: 9775)${RESET}"
   echo -e "  ${YELLOW}WEB_PORT${RESET}   ${DIM}Web server port (default: 8000)${RESET}\n"
 }
 

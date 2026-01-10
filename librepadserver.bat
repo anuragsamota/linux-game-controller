@@ -11,7 +11,7 @@ echo   LIBREPAD SERVER MANAGER (Windows)
 echo ==========================================
 echo.
 echo   1^) init   - Initialize environment (no-op on Windows)
-echo   2^) start  - Start WebSocket and Web servers
+echo   2^) start  - Start WebSocket, UDP, and Web servers
 echo   3^) reset  - Reset environment (no-op on Windows)
 echo   4^) help   - Show commands and usage
 echo   0^) exit   - Exit
@@ -40,7 +40,8 @@ pause >nul
 goto menu
 
 :do_start
-call "%SCRIPTS_DIR%\start.bat"
+REM Default to 'all' mode (WebSocket, UDP, and Web)
+call "%SCRIPTS_DIR%\start.bat" all
 goto menu
 
 :do_reset
@@ -53,18 +54,31 @@ goto menu
 :do_help
 cls
 echo Usage:
-echo   librepadserver.bat ^<command^>
+echo   librepadserver.bat ^<command^> [options]
 echo.
 echo Commands:
-echo   init   - Initialize environment (no-op on Windows)
-echo   start  - Start WebSocket server and web server
-echo   reset  - Reset environment (no-op on Windows)
-echo   help   - Show this help
+echo   init          - Initialize environment (no-op on Windows)
+echo   start [mode]  - Start servers (mode: all, ws, udp, web, ws-web; default: all)
+echo   reset         - Reset environment (no-op on Windows)
+echo   help          - Show this help
+echo.
+echo Service Modes:
+echo   all    - Start WebSocket, UDP, and Web servers (default)
+echo   ws     - Start only WebSocket server
+echo   udp    - Start only UDP server
+echo   web    - Start only Web server
+echo   ws-web - Start WebSocket and Web servers (no UDP)
 echo.
 echo Environment Variables:
 echo   WS_HOST  - WebSocket bind address (default: 0.0.0.0)
 echo   WS_PORT  - WebSocket port (default: 8765)
+echo   UDP_PORT - UDP port (default: 9775)
 echo   WEB_PORT - Web server port (default: 8000)
+echo.
+echo Examples:
+echo   librepadserver.bat start       (starts all: WS + UDP + Web)
+echo   librepadserver.bat start udp   (starts only UDP)
+echo   librepadserver.bat start ws-web (starts WS + Web, no UDP)
 echo.
 echo Press any key to return to menu...
 pause >nul

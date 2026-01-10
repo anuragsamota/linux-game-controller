@@ -89,3 +89,9 @@ class MouseController(BaseController):
             "wheel": "REL_WHEEL",
             "hwheel": "REL_HWHEEL",
         }
+
+    def close(self) -> None:
+        """Clean up the uinput device."""
+        if hasattr(self, 'device') and self.device:
+            self.device.destroy()
+            self.device = None

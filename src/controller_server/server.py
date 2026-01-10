@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-"""Async WebSocket server that forwards input events to virtual controllers."""
+"""Async WebSocket and UDP server that forwards input events to virtual controllers."""
 
 import asyncio
 import json
@@ -11,19 +11,28 @@ import websockets
 from websockets.server import WebSocketServerProtocol
 
 from .device_registry import DeviceRegistry
+from .librepad_udp import LibrePadUDPServer
 
 logger = logging.getLogger(__name__)
 
 
 
 class ControllerServer:
-    def __init__(self, host: str = "0.0.0.0", port: int = 8765) -> None:
+    def __init__(self, host: str = "0.0.0.0", port: int = 8765, udp_port: int = 9775) -> None:
         self.host = host
         self.port = port
+        self.udp_port = udp_port
         self.registry = DeviceRegistry()
 
     async def start(self) -> None:
-        logger.info("Starting controller server on %s:%s", self.host, self.port)
+        logger.info("Starting controller server on %s:%s (WebSocket) and %s:%s (UDP)", 
+                   self.host, self.port, self.host, self.udp_port)
+        
+        # Start UDP server in background
+        udp_server = LibrePadUDPServer(host=self.host, port=self.udp_port)
+        udp_server.set_device_registry(self.registry)
+        udp_task = asyncio.create_task(udp_server.start())
+        
         async with websockets.serve(
             self._handle,
             self.host,
@@ -38,6 +47,7 @@ class ControllerServer:
             except asyncio.CancelledError:
                 # Graceful shutdown on cancellation (SIGTERM, task cancel, etc.)
                 logger.info("Server task cancelled - shutting down gracefully")
+                udp_task.cancel()
                 return
 
     async def _handle(self, websocket: WebSocketServerProtocol) -> None:
@@ -186,9 +196,9 @@ class ControllerServer:
         raise ValueError(f"Unsupported event '{msg_type}'")
 
 
-def run_server(host: str = "0.0.0.0", port: int = 8765) -> None:
+def run_server(host: str = "0.0.0.0", port: int = 8765, udp_port: int = 9775) -> None:
     logging.basicConfig(level=logging.INFO, format="[%(asctime)s] %(levelname)s %(name)s: %(message)s")
-    server = ControllerServer(host=host, port=port)
+    server = ControllerServer(host=host, port=port, udp_port=udp_port)
     try:
         asyncio.run(server.start())
     except (KeyboardInterrupt, asyncio.CancelledError):

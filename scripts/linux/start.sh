@@ -1,18 +1,29 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Start both the WebSocket controller server and the static web server.
+# Start LibrePad servers with flexible configuration.
 # - WebSocket server (game controller): src/controller_server/main.py
+# - UDP server (native clients): Built into controller_server/main.py
 # - Web client server (static files): web_server.py
+#
+# Usage: start.sh [SERVICE_MODE]
+# SERVICE_MODE:
+#   all       - Start WebSocket, UDP, and Web (default)
+#   ws        - Start only WebSocket server
+#   udp       - Start only UDP server
+#   web       - Start only Web server
+#   ws-web    - Start WebSocket and Web (no UDP)
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 VENV_DIR="${ROOT_DIR}/.venv"
 WS_HOST="${WS_HOST:-0.0.0.0}"
 WS_PORT="${WS_PORT:-8765}"
+UDP_PORT="${UDP_PORT:-9775}"
 WEB_PORT="${WEB_PORT:-8000}"
 MAX_PORT_SCAN=20
 INPUT_GROUP="input"
 UINPUT_RULE="/etc/udev/rules.d/99-uinput.rules"
+SERVICE_MODE="${1:-all}"
 
 require() {
 	if ! command -v "$1" >/dev/null 2>&1; then
@@ -33,10 +44,17 @@ activate_venv() {
 }
 
 start_ws_server() {
-	echo "[INFO] Starting WebSocket controller server on ${WS_HOST}:${WS_PORT}" 
+	echo "[INFO] Starting WebSocket controller server on ${WS_HOST}:${WS_PORT} (UDP on ${UDP_PORT})"
 	cd "${ROOT_DIR}"
 	source "${VENV_DIR}/bin/activate"
-	PYTHONPATH="${ROOT_DIR}" exec python3 -m src.controller_server.main --host "${WS_HOST}" --port "${WS_PORT}" 
+	PYTHONPATH="${ROOT_DIR}" exec python3 -m src.controller_server.main --host "${WS_HOST}" --port "${WS_PORT}" --udp-port "${UDP_PORT}"
+}
+
+start_udp_only() {
+	echo "[INFO] Starting UDP-only controller server on ${WS_HOST}:${UDP_PORT}"
+	cd "${ROOT_DIR}"
+	source "${VENV_DIR}/bin/activate"
+	PYTHONPATH="${ROOT_DIR}" exec python3 -m src.controller_server.udp_server --host "${WS_HOST}" --port "${UDP_PORT}"
 }
 
 start_web_server() {
@@ -125,61 +143,113 @@ pick_port() {
 main() {
 	require python3
 	activate_venv
-	check_controller_env
+
+	# Validate service mode
+	case "${SERVICE_MODE}" in
+		all|ws|udp|web|ws-web)
+			: # Valid mode
+			;;
+		*)
+			echo "[ERROR] Invalid service mode: ${SERVICE_MODE}" >&2
+			echo "[INFO] Valid modes: all, ws, udp, web, ws-web" >&2
+			exit 1
+			;;
+	esac
+
+	# Check controller environment only if starting WS/UDP
+	if [[ "${SERVICE_MODE}" =~ (all|ws|udp|ws-web) ]]; then
+		check_controller_env
+	fi
 
 	if ! command -v ss >/dev/null 2>&1 && ! command -v lsof >/dev/null 2>&1; then
 		echo "[WARN] Neither 'ss' nor 'lsof' found; port availability checks disabled"
 	else
-		WS_PORT=$(pick_port "${WS_PORT}")
-		WEB_PORT=$(pick_port "${WEB_PORT}")
+		# Only pick ports for services we're starting
+		if [[ "${SERVICE_MODE}" =~ (all|ws|ws-web) ]]; then
+			WS_PORT=$(pick_port "${WS_PORT}")
+		fi
+		if [[ "${SERVICE_MODE}" =~ (all|udp) ]]; then
+			UDP_PORT=$(pick_port "${UDP_PORT}")
+		fi
+		if [[ "${SERVICE_MODE}" =~ (all|web|ws-web) ]]; then
+			WEB_PORT=$(pick_port "${WEB_PORT}")
+		fi
 	fi
 
 	trap 'echo "[INFO] Stopping servers..."; jobs -p | xargs -r kill' INT TERM EXIT
 
-	start_ws_server 2>&1 | sed 's/^/[WS ] /' &
-	WS_PID=$!
-
-	start_web_server 2>&1 | sed 's/^/[WEB] /' &
-	WEB_PID=$!
-
-	echo "[INFO] Servers running (WS PID=${WS_PID}, WEB PID=${WEB_PID})"
-	echo ""
-	echo "=========================================="
-	echo "🎮 Controller Access URLs:"
-	echo "=========================================="
-	
-	# Get all network interfaces and their IPv4s (exclude loopback)
-	if command -v ip >/dev/null 2>&1; then
-		# Stable, parseable one-line format
-		while IFS= read -r line; do
-			iface=$(echo "$line" | awk '{print $2}')
-			ip_addr=$(echo "$line" | awk '{print $4}' | cut -d'/' -f1)
-			if [ "$iface" != "lo" ] && [ -n "$ip_addr" ] && [ "$ip_addr" != "127.0.0.1" ]; then
-				echo "  📡 $iface: http://$ip_addr:${WEB_PORT}"
-			fi
-		done < <(ip -4 -o addr show up scope global)
-	elif command -v ifconfig >/dev/null 2>&1; then
-		# Fallback to ifconfig: track current interface and its inet line
-		current_iface=""
-		while IFS= read -r line; do
-			if echo "$line" | grep -E "^[a-zA-Z0-9].*:" >/dev/null 2>&1; then
-				current_iface=$(echo "$line" | awk -F':' '{print $1}')
-			elif echo "$line" | grep -E "inet (addr:)?[0-9.]+" >/dev/null 2>&1; then
-				ip_addr=$(echo "$line" | sed -n 's/.*inet \(addr:\)\?\([0-9.]*\).*/\2/p')
-				if [ -n "$current_iface" ] && [ -n "$ip_addr" ] && [ "$ip_addr" != "127.0.0.1" ]; then
-					echo "  📡 $current_iface: http://$ip_addr:${WEB_PORT}"
-				fi
-			fi
-		done < <(ifconfig)
+	# Start WebSocket server (includes UDP)
+	if [[ "${SERVICE_MODE}" =~ (all|ws|ws-web) ]]; then
+		start_ws_server 2>&1 | sed 's/^/[WS ] /' &
+		WS_PID=$!
+		echo "[INFO] WebSocket server running (PID=${WS_PID})"
 	fi
-	
-	# Always show localhost
-	echo "  🏠 Localhost: http://localhost:${WEB_PORT}"
-	echo "  🏠 Loopback: http://127.0.0.1:${WEB_PORT}"
+
+	# Start Web server
+	if [[ "${SERVICE_MODE}" =~ (all|web|ws-web) ]]; then
+		start_web_server 2>&1 | sed 's/^/[WEB] /' &
+		WEB_PID=$!
+		echo "[INFO] Web server running (PID=${WEB_PID})"
+	fi
+
+	# If only UDP, run the standalone UDP server
+	if [[ "${SERVICE_MODE}" == "udp" ]]; then
+		start_udp_only 2>&1 | sed 's/^/[UDP] /' &
+		UDP_PID=$!
+		echo "[INFO] UDP server running (standalone, PID=${UDP_PID})"
+	fi
+
 	echo ""
-	echo "WebSocket Endpoint: ws://${WS_HOST}:${WS_PORT}"
 	echo "=========================================="
-	echo "[INFO] Press Ctrl+C to stop both servers."
+	echo "🎮 LibrePad Server"
+	echo "=========================================="
+	
+	# Display active services
+	if [[ "${SERVICE_MODE}" =~ (all|ws|ws-web) ]]; then
+		echo "WebSocket Endpoint: ws://${WS_HOST}:${WS_PORT}"
+	fi
+	if [[ "${SERVICE_MODE}" =~ (all|udp) ]]; then
+		echo "UDP Endpoint: udp://${WS_HOST}:${UDP_PORT}"
+	fi
+
+	# Show web URLs only if web is running
+	if [[ "${SERVICE_MODE}" =~ (all|web|ws-web) ]]; then
+		echo ""
+		echo "Controller Access URLs:"
+		
+		# Get all network interfaces and their IPv4s (exclude loopback)
+		if command -v ip >/dev/null 2>&1; then
+			# Stable, parseable one-line format
+			while IFS= read -r line; do
+				iface=$(echo "$line" | awk '{print $2}')
+				ip_addr=$(echo "$line" | awk '{print $4}' | cut -d'/' -f1)
+				if [ "$iface" != "lo" ] && [ -n "$ip_addr" ] && [ "$ip_addr" != "127.0.0.1" ]; then
+					echo "  📡 $iface: http://$ip_addr:${WEB_PORT}"
+				fi
+			done < <(ip -4 -o addr show up scope global)
+		elif command -v ifconfig >/dev/null 2>&1; then
+			# Fallback to ifconfig: track current interface and its inet line
+			current_iface=""
+			while IFS= read -r line; do
+				if echo "$line" | grep -E "^[a-zA-Z0-9].*:" >/dev/null 2>&1; then
+					current_iface=$(echo "$line" | awk -F':' '{print $1}')
+				elif echo "$line" | grep -E "inet (addr:)?[0-9.]+" >/dev/null 2>&1; then
+					ip_addr=$(echo "$line" | sed -n 's/.*inet \(addr:\)\?\([0-9.]*\).*/\2/p')
+					if [ -n "$current_iface" ] && [ -n "$ip_addr" ] && [ "$ip_addr" != "127.0.0.1" ]; then
+						echo "  📡 $current_iface: http://$ip_addr:${WEB_PORT}"
+					fi
+				fi
+			done < <(ifconfig)
+		fi
+		
+		# Always show localhost
+		echo "  🏠 Localhost: http://localhost:${WEB_PORT}"
+		echo "  🏠 Loopback: http://127.0.0.1:${WEB_PORT}"
+	fi
+
+	echo "=========================================="
+	echo "[INFO] Press Ctrl+C to stop servers."
+	echo ""
 
 	wait
 }

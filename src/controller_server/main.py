@@ -8,15 +8,16 @@ from .server import run_server
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Virtual controller WebSocket server")
+    parser = argparse.ArgumentParser(description="Virtual controller WebSocket and UDP server")
     parser.add_argument("--host", default="0.0.0.0", help="Host interface to bind")
-    parser.add_argument("--port", type=int, default=8765, help="Port to listen on")
+    parser.add_argument("--port", type=int, default=8765, help="WebSocket port to listen on")
+    parser.add_argument("--udp-port", type=int, default=9775, help="UDP port to listen on")
     return parser.parse_args()
 
 
 def main() -> None:
     args = parse_args()
-    run_server(host=args.host, port=args.port)
+    run_server(host=args.host, port=args.port, udp_port=args.udp_port)
 
 
 if __name__ == "__main__":

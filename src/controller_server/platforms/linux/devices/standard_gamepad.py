@@ -112,3 +112,9 @@ class StandardGamepad(BaseController):
         span = spec.max_value - spec.min_value
         normalized = (clamped + 1.0) / 2.0  # map -1..1 to 0..1
         return int(round(spec.min_value + normalized * span))
+
+    def close(self) -> None:
+        """Clean up the uinput device."""
+        if hasattr(self, 'device') and self.device:
+            self.device.destroy()
+            self.device = None

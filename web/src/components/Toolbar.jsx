@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { BUTTON_TYPES, createNewButton } from '../utils/defaultConfigs';
 
 const Toolbar = ({ 
@@ -60,7 +60,7 @@ const Toolbar = ({
               </button>
               
               {showAddMenu && (
-                <div className="absolute top-full right-0 mt-1 bg-gray-900 border border-cyan-400/50 rounded shadow-lg z-50 min-w-[160px]">
+                <div className="absolute top-full right-0 mt-1 bg-gray-900 border border-cyan-400/50 rounded shadow-lg z-50 min-w-40">
                   <div className="p-1 space-y-0.5">
                     <button
                       onClick={() => handleAddButton(BUTTON_TYPES.ACTION)}

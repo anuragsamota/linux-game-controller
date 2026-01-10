@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { DEFAULT_CONFIGS, createNewConfig } from '../utils/defaultConfigs';
 
 const ConfigMenu = ({ 
@@ -79,7 +79,7 @@ const ConfigMenu = ({
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-hidden">
       <div className="bg-gray-900 border border-cyan-500/30 rounded-2xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl shadow-cyan-500/20">
-        <div className="flex items-center justify-between p-6 border-b border-cyan-500/30 bg-gradient-to-r from-gray-900 to-slate-900">
+        <div className="flex items-center justify-between p-6 border-b border-cyan-500/30 bg-linear-to-r from-gray-900 to-slate-900">
           <h2 className="text-2xl font-bold text-cyan-300">Controller Configurations</h2>
           <button
             onClick={onClose}
@@ -191,7 +191,7 @@ const ConfigMenu = ({
                     if (e.key === 'Escape') setIsCreating(false);
                   }}
                   placeholder="Controller name..."
-                  className="flex-1 px-4 py-2 bg-[var(--color-gamepad-background)] border border-[var(--color-gamepad-border)] rounded text-white"
+                  className="flex-1 px-4 py-2 bg-gamepad-background border border-gamepad-border rounded text-white"
                   autoFocus
                 />
                 <button
@@ -217,7 +217,7 @@ const ConfigMenu = ({
                 </button>
                 <button
                   onClick={handleImport}
-                  className="px-4 py-3 bg-[var(--color-gamepad-secondary)] text-white rounded-lg hover:opacity-80 font-medium"
+                  className="px-4 py-3 bg-gamepad-secondary text-white rounded-lg hover:opacity-80 font-medium"
                 >
                   Import JSON
                 </button>
@@ -225,13 +225,13 @@ const ConfigMenu = ({
             )}
           </div>
           
-          <div className="border-t border-[var(--color-gamepad-border)] pt-6">
+          <div className="border-t border-gamepad-border pt-6">
             <h3 className="text-lg font-semibold mb-3">Default Templates</h3>
             <div className="space-y-2">
               {DEFAULT_CONFIGS.map((config) => (
                 <div
                   key={config.id}
-                  className="p-4 rounded-lg border border-[var(--color-gamepad-border)] bg-[var(--color-gamepad-background)]"
+                  className="p-4 rounded-lg border border-gamepad-border bg-gamepad-background"
                 >
                   <div className="flex items-center justify-between">
                     <div>
@@ -240,7 +240,7 @@ const ConfigMenu = ({
                     </div>
                     <button
                       onClick={() => handleLoadDefault(config)}
-                      className="px-4 py-2 bg-[var(--color-gamepad-primary)] text-white rounded hover:opacity-80"
+                      className="px-4 py-2 bg-(--color-gamepad-primary) text-white rounded hover:opacity-80"
                     >
                       Load Template
                     </button>

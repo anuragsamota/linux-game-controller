@@ -151,6 +151,7 @@ call scripts\windows\start.bat
 - Developer Guide: [docs/Development.md](docs/Development.md)
 - Web Client Development: [docs/WebClientDevelopment.md](docs/WebClientDevelopment.md)
 - WebSocket API: [docs/WebSocketAPI.md](docs/WebSocketAPI.md)
+- UDP Protocol Spec (Design): [docs/UDPProtocol.md](docs/UDPProtocol.md)
 - Troubleshooting: [docs/Troubleshooting.md](docs/Troubleshooting.md)
 
 ## Architecture
