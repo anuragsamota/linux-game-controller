@@ -22,13 +22,26 @@ Linux is fully supported today (uinput). The codebase is now structured so a Win
 - Sudo privileges (for initialization)
 
 ## Quickstart
+
+### Linux
 Clone and prepare the project in the current directory, then auto-launch the interactive CLI:
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/anuragsamota/librepad-server/master/setup_project.sh | bash
 ```
 
-### Manual setup (full)
+### Windows
+Download and run the setup script (or clone manually):
+
+```cmd
+curl -sSL https://raw.githubusercontent.com/anuragsamota/librepad-server/master/setup_project.bat -o setup.bat && setup.bat
+```
+
+Or manually download `setup_project.bat` from the repo and double-click it.
+
+## Manual Setup
+
+### Linux
 Perform a clean local setup manually:
 
 ```bash
@@ -62,14 +75,55 @@ Or use the interactive manager:
 ./librepadserver.sh
 ```
 
+### Windows
+Perform a clean local setup manually:
+
+```cmd
+REM 1) Clone the repo
+git clone https://github.com/anuragsamota/librepad-server.git
+cd librepad-server
+
+REM 2) Create and activate virtual environment
+py -3 -m venv .venv
+call .venv\Scripts\activate.bat
+
+REM 3) Install dependencies
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+
+REM 4) Install web client dependencies
+cd web
+npm install
+cd ..
+
+REM 5) Build web client
+call scripts\windows\build.bat
+
+REM 6) Start servers (WebSocket + Web UI)
+call scripts\windows\start.bat
+```
+
+Or use the interactive manager:
+
+```cmd
+librepadserver.bat
+```
+
 **Environment variables:**
 - `WS_HOST` (default: `0.0.0.0`)
 - `WS_PORT` (default: `8765`, with port fallback scanning)
 - `WEB_PORT` (default: `8000`, with port fallback scanning)
 
-**Example:**
+**Example (Linux):**
 ```bash
 WS_PORT=9000 WEB_PORT=8088 bash scripts/linux/start.sh
+```
+
+**Example (Windows):**
+```cmd
+set WS_PORT=9000
+set WEB_PORT=8088
+call scripts\windows\start.bat
 ```
 
 ## Scripts Overview
