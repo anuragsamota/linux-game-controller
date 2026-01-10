@@ -8,15 +8,15 @@ set -euo pipefail
 # - Installs dependencies from requirements.txt (if present)
 #
 # Usage examples:
-#   ./setup_project.sh https://github.com/anuragsamota/linux-game-controller.git my-project
-#   ./setup_project.sh https://github.com/anuragsamota/linux-game-controller.git      # clones into repo name
+#   ./setup_project.sh https://github.com/anuragsamota/librepad-server.git my-project
+#   ./setup_project.sh https://github.com/anuragsamota/librepad-server.git      # clones into repo name
 #   ./setup_project.sh                            # uses default repo URL and directory name
 #
 # Optional env vars:
 #   PYTHON_BIN=python3.11   # choose a specific python
 #   VENV_NAME=.venv         # virtualenv directory name
 
-DEFAULT_REPO="https://github.com/anuragsamota/linux-game-controller.git"
+DEFAULT_REPO="https://github.com/anuragsamota/librepad-server.git"
 REPO_URL=${1:-$DEFAULT_REPO}
 TARGET_DIR=${2:-}
 PYTHON_BIN=${PYTHON_BIN:-python3}

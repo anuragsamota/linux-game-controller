@@ -29,7 +29,7 @@ export const DEFAULT_CONFIGS = [
       { id: 'start', label: 'START', type: BUTTON_TYPES.SPECIAL, x: 55, y: 35, width: 10, height: 5, color: '#6366f1', scale: 1 },
       { id: 'l3', label: 'L3', type: BUTTON_TYPES.JOYSTICK, x: 25, y: 70, width: 15, height: 15, color: '#8b5cf6', isJoystick: true, axis: 'left', scale: 1 },
       { id: 'r3', label: 'R3', type: BUTTON_TYPES.JOYSTICK, x: 60, y: 70, width: 15, height: 15, color: '#8b5cf6', isJoystick: true, axis: 'right', scale: 1 },
-      { id: 'touchpad', label: 'TOUCH', type: BUTTON_TYPES.TOUCHPAD, x: 40, y: 20, width: 20, height: 15, color: '#9333ea', isTouchpad: true, scale: 1 },
+      { id: 'touchpad', label: 'TOUCH', type: BUTTON_TYPES.TOUCHPAD, x: 40, y: 20, width: 20, height: 15, color: '#9333ea', isTouchpad: true, scale: 1, sensitivity: 2.0, tapToClick: true },
     ],
   },
   {

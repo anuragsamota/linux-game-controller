@@ -7,6 +7,7 @@ const Controller = ({
   isEditMode, 
   onButtonPress, 
   onButtonRelease,
+  onTouchpadTap,
   onUpdateButton,
   onDeleteButton,
   scale = 1,
@@ -79,6 +80,7 @@ const Controller = ({
             isSelected={selectedButtonId === button.id}
             onPress={handleButtonPress}
             onRelease={handleButtonRelease}
+            onTap={onTouchpadTap}
             onSelect={setSelectedButtonId}
             onUpdate={onUpdateButton}
             onDelete={onDeleteButton}

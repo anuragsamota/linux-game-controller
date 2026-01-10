@@ -31,21 +31,34 @@ def make_fake_uinput() -> types.ModuleType:
     mod.BTN_MODE = 316
     mod.BTN_THUMBL = 317
     mod.BTN_THUMBR = 318
+    mod.BTN_DPAD_UP = 544
+    mod.BTN_DPAD_DOWN = 545
+    mod.BTN_DPAD_LEFT = 546
+    mod.BTN_DPAD_RIGHT = 547
 
-    # Axis codes
-    mod.ABS_X = 0
-    mod.ABS_Y = 1
-    mod.ABS_RX = 3
-    mod.ABS_RY = 4
-    mod.ABS_Z = 2
-    mod.ABS_RZ = 5
-    mod.ABS_HAT0X = 16
-    mod.ABS_HAT0Y = 17
+    # Axis codes (make them support + operator for ranges)
+    class AxisCode(int):
+        def __add__(self, other):
+            if isinstance(other, tuple):
+                return (int(self),) + other
+            return super().__add__(other)
+    
+    mod.ABS_X = AxisCode(0)
+    mod.ABS_Y = AxisCode(1)
+    mod.ABS_RX = AxisCode(3)
+    mod.ABS_RY = AxisCode(4)
+    mod.ABS_Z = AxisCode(2)
+    mod.ABS_RZ = AxisCode(5)
+    mod.ABS_HAT0X = AxisCode(16)
+    mod.ABS_HAT0Y = AxisCode(17)
 
     class FakeDevice:
-        def __init__(self, events, name=None):
+        def __init__(self, events, name=None, vendor=None, product=None, version=None):
             self.events = events
             self.name = name
+            self.vendor = vendor
+            self.product = product
+            self.version = version
             self.emitted = []
             mod.last_device = self
 
@@ -61,7 +74,7 @@ _fake_uinput = make_fake_uinput()
 _original_uinput = sys.modules.get("uinput")
 sys.modules["uinput"] = _fake_uinput
 
-from controller_server.devices.standard_gamepad import AXES, BUTTONS, StandardGamepad  # noqa: E402
+from controller_server.platforms.linux.devices.standard_gamepad import AXES, BUTTONS, StandardGamepad  # noqa: E402
 
 
 class StandardGamepadTests(unittest.TestCase):

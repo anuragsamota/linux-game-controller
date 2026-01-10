@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# 🎮 Virtual Game Controller Manager
+# 🎮 LibrePad Server Manager
 # Beautiful, colorful, interactive CLI wrapper
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -49,7 +49,7 @@ print_header() {
   cat <<'EOF'
 ╔═══════════════════════════════════════════════════════╗
 ║                                                       ║
-║   🎮  VIRTUAL GAME CONTROLLER MANAGER  🎮            ║
+║   🎮  LIBREPAD SERVER MANAGER  🎮                    ║
 ║                                                       ║
 ║   Control your Linux virtual gamepad with ease       ║
 ║                                                       ║

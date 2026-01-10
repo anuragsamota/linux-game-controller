@@ -156,8 +156,12 @@ function App() {
       wsRef.current.sendAxis(`${axisPrefix}y`, data.y);
       buttonStateRef.current[buttonId] = { type: 'joystick', x: data.x, y: data.y };
     } else if (type === 'touchpad') {
-      wsRef.current.sendAxis('px', data.x);
-      wsRef.current.sendAxis('py', data.y);
+      // Get touchpad config to read sensitivity
+      const touchpad = activeConfig?.buttons.find(b => b.id === buttonId);
+      const sensitivity = (touchpad?.sensitivity ?? 2.0) * 10; // Base multiplier (default 2.0)
+      const dx = data.x * sensitivity;
+      const dy = data.y * sensitivity;
+      wsRef.current.sendMouseMove(dx, dy);
       buttonStateRef.current[buttonId] = { type: 'touchpad', x: data.x, y: data.y };
     } else {
       wsRef.current.sendButton(getButtonName(buttonId), true);
@@ -175,12 +179,20 @@ function App() {
         wsRef.current.sendAxis(`${axisPrefix}y`, 0);
       }
     } else if (type === 'touchpad') {
-      wsRef.current.sendAxis('px', 0);
-      wsRef.current.sendAxis('py', 0);
+      // Touchpad release doesn't need to send anything (relative movement)
     } else {
       wsRef.current.sendButton(getButtonName(buttonId), false);
     }
     delete buttonStateRef.current[buttonId];
+  };
+
+  const handleTouchpadTap = (touchpadId) => {
+    if (!wsRef.current || !isConnected) return;
+    // Send left click
+    wsRef.current.sendMouseButton('left', true);
+    setTimeout(() => {
+      wsRef.current.sendMouseButton('left', false);
+    }, 50); // 50ms click duration
   };
 
   const handleSelectConfig = (configId) => {
@@ -307,6 +319,7 @@ function App() {
             isEditMode={isEditMode}
             onButtonPress={handleButtonPress}
             onButtonRelease={handleButtonRelease}
+            onTouchpadTap={handleTouchpadTap}
             onUpdateButton={handleUpdateButton}
             onDeleteButton={handleDeleteButton}
             scale={scale}

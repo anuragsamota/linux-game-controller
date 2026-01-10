@@ -1,5 +1,12 @@
 # Development Guide
 
+Platform support: Linux is fully supported via `uinput`. The registry is now platform-aware so a Windows backend (e.g., ViGEm/vJoy) can be added without changing the server protocol.
+
+Code organization:
+- `server.py` handles WebSocket transport and message parsing
+- Platform backends live under `platforms/<os>/devices/` (Linux uses uinput; Windows stubbed)
+- Shared interfaces are in `devices/base_controller.py`
+
 ## Prerequisites
 - Python 3.13+
 - Linux with `uinput`
@@ -17,7 +24,7 @@ pip install -r requirements.txt
 ```bash
 PYTHONPATH=. python -m src.controller_server.main --host 0.0.0.0 --port 8765
 ```
-[WEB] python3: can't open file '/home/anurag/Downloads/linux-game-controller/web_server.py': [Errno 2] No such file or directory
+[WEB] python3: can't open file '/home/anurag/Downloads/librepad-server/web_server.py': [Errno 2] No such file or directory
 
 - Static web server only (serves ./web):
 ```bash

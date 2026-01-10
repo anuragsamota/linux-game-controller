@@ -1,6 +1,7 @@
-# Linux Game Controller (Virtual)
+# LibrePad Server
 
-A modern, customizable virtual gamepad system with a React-based web interface for controlling Linux games over WebSocket.
+LibrePad Server is a modern, customizable virtual gamepad backend with a React-based web interface for controlling games over WebSocket.
+Linux is fully supported today (uinput). The codebase is now structured so a Windows backend (e.g., ViGEm/vJoy) can be added without API changes.
 
 ## Features
 
@@ -14,7 +15,7 @@ A modern, customizable virtual gamepad system with a React-based web interface f
 - **Joystick Support**: Analog stick controls with visual feedback
 
 ## Requirements
-- Linux with `uinput` support
+- Linux with `uinput` support (Windows backend planned)
 - Python 3.13+
 - Node.js 18+ (for web client development)
 - Virtual environment in `.venv`
@@ -24,7 +25,7 @@ A modern, customizable virtual gamepad system with a React-based web interface f
 Clone and prepare the project in the current directory, then auto-launch the interactive CLI:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/anuragsamota/linux-game-controller/master/setup_project.sh | bash
+curl -sSL https://raw.githubusercontent.com/anuragsamota/librepad-server/master/setup_project.sh | bash
 ```
 
 ### Manual setup (full)
@@ -32,8 +33,8 @@ Perform a clean local setup manually:
 
 ```bash
 # 1) Clone the repo
-git clone https://github.com/anuragsamota/linux-game-controller.git
-cd linux-game-controller
+git clone https://github.com/anuragsamota/librepad-server.git
+cd librepad-server
 
 # 2) Create and activate virtual environment
 python3 -m venv .venv
@@ -83,8 +84,8 @@ WS_PORT=9000 WEB_PORT=8088 ./ctl.sh start
 - Troubleshooting: [docs/Troubleshooting.md](docs/Troubleshooting.md)
 
 ## Architecture
-- WebSocket server: forwards `button` and `axis` events to virtual devices.
-- Device registry: manages acquisition/release of uinput-backed devices.
+- WebSocket server: transport and message handling for `button`/`axis`/lifecycle events.
+- Device registry: manages acquisition/release of virtual devices with platform-aware backends (`platforms/linux`, Windows stub for future work).
 - Web client: sends controller/touchpad events; auto-detects server hostname.
 
 ## Graceful Shutdown

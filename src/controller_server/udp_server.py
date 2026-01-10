@@ -13,10 +13,10 @@ Protocol uses binary format instead of JSON for minimal overhead.
 
 import asyncio
 import logging
+import platform
 import struct
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Type
 
-from .devices import StandardGamepad
 from .devices.base_controller import BaseController
 
 logger = logging.getLogger(__name__)
@@ -39,12 +39,29 @@ class DeviceRegistryUDP:
     """Manages virtual devices for UDP connections."""
     
     def __init__(self):
-        self._constructors = {
-            "standard": StandardGamepad,
-        }
+        self._constructors = self._load_platform_constructors()
         self._instances: Dict[str, BaseController] = {}
         self._client_counts: Dict[str, int] = {}
         self._client_devices: Dict[Tuple[str, int], str] = {}  # (ip, port) -> device_name
+
+    def _load_platform_constructors(self) -> Dict[str, Type[BaseController]]:
+        system = platform.system().lower()
+
+        if system == "linux":
+            from .platforms.linux.devices.standard_gamepad import StandardGamepad
+
+            return {
+                "standard": StandardGamepad,
+            }
+
+        if system == "windows":
+            from .platforms.windows.devices.standard_gamepad import StandardGamepad
+
+            return {
+                "standard": StandardGamepad,
+            }
+
+        raise RuntimeError(f"Unsupported platform: {system}. Only Linux is fully supported today.")
 
     def acquire(self, name: str, display_name: str, client_addr: Tuple[str, int]) -> BaseController:
         """Get or create device for client."""

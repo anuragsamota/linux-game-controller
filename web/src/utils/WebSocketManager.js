@@ -2,6 +2,7 @@ class WebSocketManager {
   constructor() {
     this.ws = null;
     this.isConnected = false;
+    this.mouseConnected = false;
     this.reconnectAttempts = 0;
     this.maxReconnectAttempts = 3;
     this.messageQueue = [];
@@ -70,6 +71,27 @@ class WebSocketManager {
 
   sendAxis(axisName, value) {
     this.send({ event: 'axis', device: 'standard', name: axisName, value });
+  }
+
+  // Connect to mouse device for touchpad (if not already connected)
+  connectMouse() {
+    if (!this.mouseConnected) {
+      this.send({ event: 'connect', device: 'mouse', name: 'LibrePad Mouse' });
+      this.mouseConnected = true;
+    }
+  }
+
+  // Send relative mouse movement (for touchpad)
+  sendMouseMove(dx, dy) {
+    this.connectMouse(); // Ensure mouse is connected
+    this.send({ event: 'axis', device: 'mouse', name: 'dx', value: dx });
+    this.send({ event: 'axis', device: 'mouse', name: 'dy', value: dy });
+  }
+
+  // Send mouse button click (for tap-to-click)
+  sendMouseButton(button, pressed) {
+    this.connectMouse(); // Ensure mouse is connected
+    this.send({ event: 'button', device: 'mouse', name: button, pressed });
   }
 
   on(event, callback) {

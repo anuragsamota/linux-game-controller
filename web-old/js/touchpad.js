@@ -99,8 +99,6 @@ class TouchpadController {
         
         if (this.app.controller.transport === 'websocket' && this.app.controller.ws) {
             this.app.controller.ws.send(JSON.stringify(connectMsg));
-        } else if (this.app.controller.transport === 'webrtc' && this.app.controller.dataChannel) {
-            this.app.controller.dataChannel.send(JSON.stringify(connectMsg));
         } else {
             throw new Error('Not connected to server');
         }
@@ -117,8 +115,6 @@ class TouchpadController {
         
         if (this.app.controller.transport === 'websocket' && this.app.controller.ws) {
             this.app.controller.ws.send(JSON.stringify(disconnectMsg));
-        } else if (this.app.controller.transport === 'webrtc' && this.app.controller.dataChannel) {
-            this.app.controller.dataChannel.send(JSON.stringify(disconnectMsg));
         }
         
         this.touchpadDevice = null;
@@ -201,9 +197,6 @@ class TouchpadController {
         if (this.app.controller.transport === 'websocket' && this.app.controller.ws) {
             this.app.controller.ws.send(JSON.stringify(msgX));
             this.app.controller.ws.send(JSON.stringify(msgY));
-        } else if (this.app.controller.transport === 'webrtc' && this.app.controller.dataChannel) {
-            this.app.controller.dataChannel.send(JSON.stringify(msgX));
-            this.app.controller.dataChannel.send(JSON.stringify(msgY));
         }
     }
     
@@ -220,8 +213,6 @@ class TouchpadController {
         
         if (this.app.controller.transport === 'websocket' && this.app.controller.ws) {
             this.app.controller.ws.send(JSON.stringify(msg));
-        } else if (this.app.controller.transport === 'webrtc' && this.app.controller.dataChannel) {
-            this.app.controller.dataChannel.send(JSON.stringify(msg));
         }
         
         // Visual feedback

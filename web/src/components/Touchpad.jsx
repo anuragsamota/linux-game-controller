@@ -6,6 +6,7 @@ const Touchpad = ({
   isSelected, 
   onPress, 
   onRelease, 
+  onTap,
   onSelect, 
   onUpdate,
   onDelete,
@@ -15,10 +16,11 @@ const Touchpad = ({
   const [isPressed, setIsPressed] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
-  const [touchPos, setTouchPos] = useState({ x: 0, y: 0 });
+  const [lastPos, setLastPos] = useState({ x: 0, y: 0 });
   const touchpadRef = useRef(null);
   const dragStartRef = useRef({ x: 0, y: 0, buttonX: 0, buttonY: 0 });
   const resizeStartRef = useRef({ x: 0, y: 0, width: 0, height: 0 });
+  const tapStartRef = useRef({ time: 0, moved: false });
 
   const handlePointerDown = (e) => {
     if (isEditMode) {
@@ -47,7 +49,8 @@ const Touchpad = ({
       e.preventDefault();
       e.stopPropagation();
       setIsPressed(true);
-      handleTouchMove(e);
+      setLastPos({ x: e.clientX, y: e.clientY });
+      tapStartRef.current = { time: Date.now(), moved: false };
     }
   };
 
@@ -86,34 +89,51 @@ const Touchpad = ({
       setIsDragging(false);
       setIsResizing(false);
     } else {
+      const tapDuration = Date.now() - tapStartRef.current.time;
+      const isTap = tapDuration < 200 && !tapStartRef.current.moved;
+      
+      if (isTap && (touchpad.tapToClick ?? true)) {
+        onTap?.(touchpad.id);
+      }
+      
       setIsPressed(false);
-      setTouchPos({ x: 0, y: 0 });
-      onRelease?.(touchpad.id, 0, 0);
+      onRelease?.(touchpad.id);
     }
   };
 
   const handleTouchMove = (e) => {
-    if (!touchpadRef.current) return;
+    if (!touchpadRef.current || !isPressed) return;
     
+    // Calculate delta movement from last position
+    const deltaX = e.clientX - lastPos.x;
+    const deltaY = e.clientY - lastPos.y;
+    
+    // Mark as moved if significant movement detected
+    if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) {
+      tapStartRef.current.moved = true;
+    }
+    
+    // Update last position
+    setLastPos({ x: e.clientX, y: e.clientY });
+    
+    // Apply sensitivity (default 2.0)
+    const sensitivity = touchpad.sensitivity ?? 2.0;
+    const scaledDeltaX = deltaX * sensitivity;
+    const scaledDeltaY = deltaY * sensitivity;
+    
+    // Normalize deltas to a reasonable range (-1 to 1)
     const rect = touchpadRef.current.getBoundingClientRect();
-    const centerX = rect.left + rect.width / 2;
-    const centerY = rect.top + rect.height / 2;
+    const normalizedX = scaledDeltaX / (rect.width / 2);
+    const normalizedY = scaledDeltaY / (rect.height / 2);
     
-    const deltaX = e.clientX - centerX;
-    const deltaY = e.clientY - centerY;
+    // Clamp values
+    const clampedX = Math.max(-1, Math.min(1, normalizedX));
+    const clampedY = Math.max(-1, Math.min(1, normalizedY));
     
-    // Normalize to -1 to 1 range
-    const maxX = rect.width / 2;
-    const maxY = rect.height / 2;
-    
-    let normalizedX = deltaX / maxX;
-    let normalizedY = deltaY / maxY;
-    
-    normalizedX = Math.max(-1, Math.min(1, normalizedX));
-    normalizedY = Math.max(-1, Math.min(1, normalizedY));
-    
-    setTouchPos({ x: normalizedX, y: normalizedY });
-    onPress?.(touchpad.id, normalizedX, normalizedY);
+    // Send delta movement to handler (only if there's movement)
+    if (clampedX !== 0 || clampedY !== 0) {
+      onPress?.(touchpad.id, clampedX, clampedY);
+    }
   };
 
   // Handle Delete key press when touchpad is selected
@@ -142,9 +162,6 @@ const Touchpad = ({
     transition: isDragging || isResizing ? 'none' : 'filter 80ms ease-out',
   };
 
-  const touchIndicatorX = touchPos.x * 40;
-  const touchIndicatorY = touchPos.y * 40;
-
   return (
     <div
       ref={touchpadRef}
@@ -159,21 +176,19 @@ const Touchpad = ({
       onPointerUp={handlePointerUp}
     >
       <div className="absolute inset-0 flex items-center justify-center drop-shadow-lg">
-        <div className="relative w-full h-full">
-          {/* Touch indicator dot */}
+        {isPressed && !isEditMode && (
           <div 
-            className="absolute w-1/3 h-1/3 bg-white/50 rounded-full border-2 border-white/70 shadow-lg pointer-events-none"
+            className="absolute w-8 h-8 bg-white/50 rounded-full border-2 border-white/70 shadow-lg pointer-events-none"
             style={{
               left: '50%',
               top: '50%',
-              transform: `translate(calc(-50% + ${touchIndicatorX}%), calc(-50% + ${touchIndicatorY}%))`,
-              transition: 'none'
+              transform: 'translate(-50%, -50%)',
             }}
           />
-          <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-md">
-            {touchpad.label}
-          </span>
-        </div>
+        )}
+        <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-white drop-shadow-md">
+          {touchpad.label}
+        </span>
       </div>
       
       {/* Show delete button hint in edit mode even when not selected */}
@@ -186,20 +201,48 @@ const Touchpad = ({
       {isEditMode && isSelected && (
         <>
           <div className="resize-handle absolute bottom-0 right-0 w-4 h-4 bg-cyan-400 rounded-tl cursor-nwse-resize z-10" />
-          <div className="absolute -top-8 left-0 right-0 bg-gray-900 rounded px-2 py-1 text-xs text-white whitespace-nowrap flex items-center gap-1 z-20 border border-cyan-400/50">
-            <span className="text-cyan-300">Scale:</span>
-            <input
-              type="range"
-              min="0.5"
-              max="2"
-              step="0.1"
-              value={touchpad.scale ?? 1}
-              onChange={(e) => onUpdate?.({ ...touchpad, scale: parseFloat(e.target.value) })}
-              className="w-16 h-1"
-              onClick={(e) => e.stopPropagation()}
-              onPointerDown={(e) => e.stopPropagation()}
-            />
-            <span className="w-6 text-right text-cyan-300">{(touchpad.scale ?? 1).toFixed(1)}x</span>
+          <div className="absolute -top-8 left-0 bg-gray-900 rounded px-2 py-1 text-xs text-white whitespace-nowrap flex items-center gap-2 z-20 border border-cyan-400/50">
+            <label className="flex items-center gap-1">
+              <span className="text-cyan-300">Scale:</span>
+              <input
+                type="range"
+                min="0.5"
+                max="2"
+                step="0.1"
+                value={touchpad.scale ?? 1}
+                onChange={(e) => onUpdate?.({ ...touchpad, scale: parseFloat(e.target.value) })}
+                className="w-12 h-1"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+              />
+              <span className="w-6 text-right text-cyan-300">{(touchpad.scale ?? 1).toFixed(1)}x</span>
+            </label>
+            <label className="flex items-center gap-1">
+              <span className="text-cyan-300">Speed:</span>
+              <input
+                type="range"
+                min="0.5"
+                max="5"
+                step="0.1"
+                value={touchpad.sensitivity ?? 2.0}
+                onChange={(e) => onUpdate?.({ ...touchpad, sensitivity: parseFloat(e.target.value) })}
+                className="w-12 h-1"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+              />
+              <span className="w-6 text-right text-cyan-300">{(touchpad.sensitivity ?? 2.0).toFixed(1)}x</span>
+            </label>
+            <label className="flex items-center gap-1 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={touchpad.tapToClick ?? true}
+                onChange={(e) => onUpdate?.({ ...touchpad, tapToClick: e.target.checked })}
+                className="w-3 h-3"
+                onClick={(e) => e.stopPropagation()}
+                onPointerDown={(e) => e.stopPropagation()}
+              />
+              <span className="text-cyan-300">Tap</span>
+            </label>
           </div>
           <div className="absolute -top-12 right-0 bg-gray-900 rounded px-2 py-1 text-xs text-gray-300 border border-cyan-400/50 whitespace-nowrap z-20">
             Press Delete to remove

@@ -1,5 +1,5 @@
 /**
- * Virtual Game Controller - Main Application
+ * LibrePad Controller - Main Application
  * Integrates GamepadController and GamepadUI
  */
 
@@ -101,17 +101,6 @@ class VirtualGamepadApp {
             });
         }
         
-        // Transport selector auto-port switching
-        this.ui.transportSelect.addEventListener('change', () => {
-            const portField = this.ui.serverPort;
-            const value = this.ui.transportSelect.value;
-            if (value === 'webrtc' && portField.value === '8765') {
-                portField.value = '8787';
-            } else if (value === 'websocket' && portField.value === '8787') {
-                portField.value = '8765';
-            }
-        });
-
         // Override controller callbacks
         this.controller.onConnected = () => {
             this.showGamepadScreen();

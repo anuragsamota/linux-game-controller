@@ -7,7 +7,7 @@ from typing import Dict, Iterable, List
 
 import uinput
 
-from .base_controller import BaseController
+from ....devices.base_controller import BaseController
 
 
 @dataclass(frozen=True)

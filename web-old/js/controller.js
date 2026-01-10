@@ -1,6 +1,6 @@
 /**
- * GamepadController - transport-agnostic client for virtual gamepad control.
- * Supports WebSocket and WebRTC (UDP via STUN/TURN).
+ * GamepadController - WebSocket client for virtual gamepad control.
+ * WebRTC support has been removed; WebSocket is the only transport.
  */
 
 class GamepadController {
@@ -43,22 +43,18 @@ class GamepadController {
     /**
      * Connect to chosen transport
      */
-    connect(host, port, deviceName, transport = 'websocket') {
+    connect(host, port, deviceName) {
         if (this.isConnected) {
             console.warn('Already connected');
             return;
         }
 
-        this.transport = transport || 'websocket';
+        this.transport = 'websocket';
         this.serverHost = host || '127.0.0.1';
         this.serverPort = port || '8765';
         this.deviceName = deviceName || 'Virtual Gamepad';
 
-        if (this.transport === 'webrtc') {
-            this.connectWebRTC().catch((err) => this.handleError(err));
-        } else {
-            this.connectWebSocket();
-        }
+        this.connectWebSocket();
     }
 
     /**
@@ -79,7 +75,7 @@ class GamepadController {
     }
 
     /**
-     * WebRTC connection setup with WebSocket signaling
+     * WebRTC connection setup (removed)
      */
     async connectWebRTC() {
         try {
@@ -120,61 +116,9 @@ class GamepadController {
             };
 
             this.rtcPeer.onicecandidate = (event) => {
-                if (event.candidate) {
-                    if (this.signalingSocket && this.signalingSocket.readyState === WebSocket.OPEN) {
-                        this.signalingSocket.send(JSON.stringify({
-                            type: 'candidate',
-                            candidate: {
-                                candidate: event.candidate.candidate,
-                                sdpMid: event.candidate.sdpMid,
-                                sdpMLineIndex: event.candidate.sdpMLineIndex
-                            }
-                        }));
-                    }
+                async connectWebRTC() {
+                    throw new Error('WebRTC transport has been removed; use WebSocket.');
                 }
-            };
-
-            // Open signaling connection
-            const signalingUrl = `ws://${this.serverHost}:${this.serverPort}`;
-            this.signalingSocket = new WebSocket(signalingUrl);
-            this.signalingSocket.onmessage = (e) => this.handleSignalingMessage(e.data);
-            this.signalingSocket.onerror = (e) => {
-                console.error('Signaling error:', e);
-                this.handleError(e);
-            };
-            this.signalingSocket.onclose = () => {
-                this.handleTransportClosed();
-            };
-
-            await new Promise((resolve, reject) => {
-                const handleOpen = () => {
-                    this.signalingSocket.removeEventListener('error', handleErr);
-                    resolve();
-                };
-                const handleErr = (err) => {
-                    console.error('Signaling open error:', err);
-                    this.signalingSocket.removeEventListener('open', handleOpen);
-                    reject(err);
-                };
-                this.signalingSocket.addEventListener('open', handleOpen, { once: true });
-                this.signalingSocket.addEventListener('error', handleErr, { once: true });
-            });
-
-            const offer = await this.rtcPeer.createOffer();
-            await this.rtcPeer.setLocalDescription(offer);
-
-            this.signalingSocket.send(JSON.stringify({
-                type: 'offer',
-                sdp: this.rtcPeer.localDescription.sdp,
-                sdpType: this.rtcPeer.localDescription.type
-            }));
-        } catch (error) {
-            console.error('WebRTC connection error:', error);
-            this.handleError(error);
-        }
-    }
-
-    /**
      * Handle WebSocket open
      */
     handleWebSocketOpen() {
@@ -261,7 +205,7 @@ class GamepadController {
     }
 
     /**
-     * Handle transport close for both WebSocket and WebRTC
+    * Handle transport close for WebSocket
      */
     handleTransportClosed() {
         if (this.isConnected) {
@@ -322,11 +266,6 @@ class GamepadController {
      * Send message to server using active transport
      */
     send(message) {
-        if (this.transport === 'webrtc') {
-            this.sendViaDataChannel(message);
-            return;
-        }
-
         if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
             this.messageQueue.push(message);
             return;
@@ -336,23 +275,6 @@ class GamepadController {
             this.ws.send(JSON.stringify(message));
         } catch (error) {
             console.error('Failed to send message:', error);
-            this.messageQueue.push(message);
-        }
-    }
-
-    /**
-     * Send via WebRTC data channel
-     */
-    sendViaDataChannel(message) {
-        if (!this.dataChannel || this.dataChannel.readyState !== 'open') {
-            this.messageQueue.push(message);
-            return;
-        }
-
-        try {
-            this.dataChannel.send(JSON.stringify(message));
-        } catch (error) {
-            console.error('Failed to send via data channel:', error);
             this.messageQueue.push(message);
         }
     }
@@ -375,23 +297,7 @@ class GamepadController {
             this.sendDisconnect();
         }
 
-        if (this.transport === 'webrtc') {
-            if (this.signalingSocket && this.signalingSocket.readyState === WebSocket.OPEN) {
-                this.signalingSocket.send(JSON.stringify({ type: 'bye' }));
-            }
-            if (this.dataChannel && this.dataChannel.readyState !== 'closed') {
-                this.dataChannel.close();
-            }
-            if (this.rtcPeer) {
-                this.rtcPeer.close();
-            }
-            if (this.signalingSocket) {
-                this.signalingSocket.close();
-            }
-            this.dataChannel = null;
-            this.rtcPeer = null;
-            this.signalingSocket = null;
-        } else if (this.ws) {
+        if (this.ws) {
             this.ws.close();
             this.ws = null;
         }

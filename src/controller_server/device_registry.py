@@ -1,19 +1,24 @@
 """Shared device registry for virtual controllers.
 
 This module provides a transport-agnostic device management layer
-that can be used by any interface (WebSocket, WebRTC, etc.).
-The registry creates/destroys uinput devices on demand based on client connections.
+that can be used by any interface (WebSocket, etc.).
+Devices are created lazily based on client connections.
+
+Platform awareness:
+- Linux: backed by uinput (StandardGamepad, MouseController)
+- Windows: placeholder controllers are provided so imports work; real
+    Windows backend (e.g., ViGEm/vJoy) can be plugged in later without
+    refactoring server code.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Dict, Iterable, Optional
+import platform
+from typing import Dict, Iterable, Optional, Type
 
 from .devices.base_controller import BaseController
-from .devices.standard_gamepad import StandardGamepad
-from .devices.mouse_controller import MouseController
 
 logger = logging.getLogger(__name__)
 
@@ -26,13 +31,36 @@ class DeviceRegistry:
     """
 
     def __init__(self) -> None:
-        self._constructors = {
-            "standard": StandardGamepad,
-            "mouse": MouseController,
-        }
+        self._constructors = self._load_platform_constructors()
         self._instances: Dict[str, BaseController] = {}
         self._client_counts: Dict[str, int] = {}
         self._lock = asyncio.Lock()
+
+    def _load_platform_constructors(self) -> Dict[str, Type[BaseController]]:
+        """Load device constructors for the current platform without
+        importing platform-specific backends on unsupported OSes.
+        """
+        system = platform.system().lower()
+
+        if system == "linux":
+            # Import uinput-backed controllers only when running on Linux
+            from .platforms.linux.devices.standard_gamepad import StandardGamepad
+            from .platforms.linux.devices.mouse_controller import MouseController
+
+            return {
+                "standard": StandardGamepad,
+                "mouse": MouseController,
+            }
+
+        if system == "windows":
+            # Stub for future Windows implementation (e.g., ViGEm/vJoy)
+            from .platforms.windows.devices.standard_gamepad import StandardGamepad
+
+            return {
+                "standard": StandardGamepad,
+            }
+
+        raise RuntimeError(f"Unsupported platform: {system}. Only Linux is fully supported today.")
 
     async def acquire(self, name: str, display_name: str | None = None) -> BaseController:
         """Get or create a device, tracking client ownership.

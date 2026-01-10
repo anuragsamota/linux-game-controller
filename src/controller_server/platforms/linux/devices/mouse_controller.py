@@ -6,7 +6,7 @@ from typing import Dict
 
 import uinput
 
-from .base_controller import BaseController
+from ....devices.base_controller import BaseController
 
 
 class MouseController(BaseController):

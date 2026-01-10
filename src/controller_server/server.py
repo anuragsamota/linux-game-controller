@@ -41,7 +41,7 @@ class ControllerServer:
                 return
 
     async def _handle(self, websocket: WebSocketServerProtocol) -> None:
-        client_device: Optional[str] = None
+        connected_devices: set[str] = set()  # Track multiple connected devices
         remote_address = websocket.remote_address
         logger.info("New client connected from %s", remote_address)
         
@@ -66,9 +66,10 @@ class ControllerServer:
                     continue
 
                 try:
-                    response = await self._process_message(data, websocket, client_device)
-                    if response and isinstance(response, tuple):
-                        response, client_device = response
+                    response = await self._process_message(data, websocket, connected_devices)
+                    if response and isinstance(response, dict):
+                        # Response may contain device state updates
+                        pass
                 except Exception as exc:  # noqa: BLE001
                     logger.exception("Failed to process message: %s", data)
                     await self._send_error(websocket, "invalid_message", str(exc))
@@ -86,39 +87,61 @@ class ControllerServer:
             logger.error("Unexpected error handling client from %s: %s", remote_address, exc)
         finally:
             # Clean up when client disconnects
-            if client_device:
+            for device_type in connected_devices:
                 try:
-                    await self.registry.release(client_device)
-                    logger.info("Released device: %s", client_device)
+                    await self.registry.release(device_type)
+                    logger.info("Released device: %s", device_type)
                 except Exception as exc:
-                    logger.error("Failed to release device %s: %s", client_device, exc)
+                    logger.error("Failed to release device %s: %s", device_type, exc)
+
+    @staticmethod
+    async def _send_json(websocket: WebSocketServerProtocol, payload: Dict[str, Any]) -> None:
+        try:
+            await websocket.send(json.dumps(payload))
+        except websockets.exceptions.ConnectionClosed:
+            # Client disconnected before we could send
+            pass
+
+    @staticmethod
+    async def _send_error(websocket: WebSocketServerProtocol, code: str, message: str) -> None:
+        try:
+            await websocket.send(json.dumps({"type": "error", "code": code, "message": message}))
+        except websockets.exceptions.ConnectionClosed:
+            # Client disconnected before we could send error
+            pass
 
     async def _process_message(
-        self, data: Dict[str, Any], websocket: WebSocketServerProtocol, client_device: Optional[str]
-    ) -> Optional[tuple | Dict[str, Any]]:
+        self, data: Dict[str, Any], websocket: WebSocketServerProtocol, connected_devices: set[str]
+    ) -> Optional[Dict[str, Any]]:
         msg_type = data.get("event")
         if msg_type is None:
             raise ValueError("Message missing 'event' field")
 
         # Handle lifecycle events
         if msg_type == "connect":
-            if client_device:
-                raise ValueError(f"Already connected to '{client_device}'; disconnect first")
             device_type = data.get("device", "standard")
+            if device_type in connected_devices:
+                logger.warning("Device %s already connected, ignoring duplicate connect", device_type)
+                return {"type": "ok", "connected": device_type, "message": "Already connected"}
             display_name = data.get("name")  # Optional display name for the device
             device = await self.registry.acquire(device_type, display_name=display_name)
-            logger.info("Client connected to device: %s", device_type)
-            return {"type": "ok", "connected": device_type, "name": device.name}, device_type
+            connected_devices.add(device_type)
+            logger.info("Client connected to device: %s (total: %d)", device_type, len(connected_devices))
+            return {"type": "ok", "connected": device_type, "name": device.name}
 
         if msg_type == "disconnect":
-            if not client_device:
-                raise ValueError("Not connected to any device")
-            await self.registry.release(client_device)
-            logger.info("Client disconnected from device: %s", client_device)
-            return {"type": "ok"}, None
+            device_type = data.get("device")
+            if not device_type:
+                raise ValueError("Disconnect requires 'device' field")
+            if device_type not in connected_devices:
+                raise ValueError(f"Not connected to device '{device_type}'")
+            await self.registry.release(device_type)
+            connected_devices.discard(device_type)
+            logger.info("Client disconnected from device: %s (remaining: %d)", device_type, len(connected_devices))
+            return {"type": "ok"}
 
         if msg_type == "rename":
-            if not client_device:
+            if not connected_devices:
                 raise ValueError("Not connected; call 'connect' first")
             # Note: device names are immutable in uinput; set name in 'connect' event instead
             new_name = data.get("name")
@@ -127,20 +150,19 @@ class ControllerServer:
             logger.warning("Device names are immutable in uinput. Set name via 'connect' event instead.")
             return {"type": "error", "message": "Device names cannot be changed after creation. Use 'name' in the connect event."}
 
-        # Input events can optionally specify a device, otherwise use client_device
+        # Input events require specifying which device to control
         if msg_type in ("button", "axis"):
-            # Allow specifying device in the event (for multi-device support like touchpad + gamepad)
-            target_device = data.get("device", client_device)
-            
+            target_device = data.get("device")
             if not target_device:
-                raise ValueError("Not connected; call 'connect' first or specify 'device' in event")
+                raise ValueError("Event requires 'device' field")
             
-            # Get or acquire the target device
-            device = self.registry.get(target_device)
-            if not device:
-                # Auto-acquire if not already present (for touchpad use case)
+            # Auto-acquire device if not already connected
+            if target_device not in connected_devices:
                 device = await self.registry.acquire(target_device)
+                connected_devices.add(target_device)
                 logger.info("Auto-acquired device: %s", target_device)
+            else:
+                device = self.registry.get(target_device)
 
         if msg_type == "button":
             name = data.get("name")
@@ -162,23 +184,6 @@ class ControllerServer:
             return {"type": "pong"}
 
         raise ValueError(f"Unsupported event '{msg_type}'")
-
-
-    @staticmethod
-    async def _send_json(websocket: WebSocketServerProtocol, payload: Dict[str, Any]) -> None:
-        try:
-            await websocket.send(json.dumps(payload))
-        except websockets.exceptions.ConnectionClosed:
-            # Client disconnected before we could send
-            pass
-
-    @staticmethod
-    async def _send_error(websocket: WebSocketServerProtocol, code: str, message: str) -> None:
-        try:
-            await websocket.send(json.dumps({"type": "error", "code": code, "message": message}))
-        except websockets.exceptions.ConnectionClosed:
-            # Client disconnected before we could send error
-            pass
 
 
 def run_server(host: str = "0.0.0.0", port: int = 8765) -> None:
